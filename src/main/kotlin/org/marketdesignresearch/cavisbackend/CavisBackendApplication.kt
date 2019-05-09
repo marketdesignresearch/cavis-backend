@@ -37,8 +37,7 @@ class CavisBackendApplication {
         bids.setBid(SimpleBidder("B" + 3), Bid(setOf(bid3)))
         bids.setBid(SimpleBidder("B" + 4), Bid(setOf(bid4)))
 
-        val auctionInstance = AuctionInstance(bids)
-        val am = ORVCGAuction(auctionInstance)
+        val am = ORVCGAuction(bids)
         val payment = am.payment
 
         println("Total allocation value: ${am.allocation.totalAllocationValue.toDouble()}")
