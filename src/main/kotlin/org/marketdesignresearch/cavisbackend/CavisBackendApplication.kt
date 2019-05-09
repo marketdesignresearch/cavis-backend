@@ -1,7 +1,9 @@
 package org.marketdesignresearch.cavisbackend
 
 import org.marketdesignresearch.mechlib.domain.*
-import org.marketdesignresearch.mechlib.domain.bidder.SimpleBidder
+import org.marketdesignresearch.mechlib.domain.bid.Bid
+import org.marketdesignresearch.mechlib.domain.bid.Bids
+import org.marketdesignresearch.mechlib.domain.bidder.XORBidder
 import org.marketdesignresearch.mechlib.mechanisms.vcg.ORVCGAuction
 import org.slf4j.LoggerFactory
 import org.springframework.boot.ApplicationRunner
@@ -32,17 +34,17 @@ class CavisBackendApplication {
         val bid3 = BundleBid(BigDecimal.valueOf(2), setOf(B, C), "3")
         val bid4 = BundleBid(BigDecimal.valueOf(1), setOf(C, D), "4")
         val bids = Bids()
-        bids.setBid(SimpleBidder("B" + 1), Bid(setOf(bid1)))
-        bids.setBid(SimpleBidder("B" + 2), Bid(setOf(bid2)))
-        bids.setBid(SimpleBidder("B" + 3), Bid(setOf(bid3)))
-        bids.setBid(SimpleBidder("B" + 4), Bid(setOf(bid4)))
+        bids.setBid(XORBidder("B" + 1), Bid(setOf(bid1)))
+        bids.setBid(XORBidder("B" + 2), Bid(setOf(bid2)))
+        bids.setBid(XORBidder("B" + 3), Bid(setOf(bid3)))
+        bids.setBid(XORBidder("B" + 4), Bid(setOf(bid4)))
 
         val am = ORVCGAuction(bids)
         val payment = am.payment
 
         println("Total allocation value: ${am.allocation.totalAllocationValue.toDouble()}")
         for (i in 1..4) {
-            println("Payment of bidder $i: ${payment.paymentOf(SimpleBidder("B$i")).amount.toDouble()}")
+            println("Payment of bidder $i: ${payment.paymentOf(XORBidder("B$i")).amount.toDouble()}")
         }
     }
 
