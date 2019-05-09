@@ -17,7 +17,7 @@ class CavisBackendApplication {
 
     @Bean
     fun init() = ApplicationRunner {
-        logger.info("CPLEX_STUDIO_DIR128: {}", System.getenv("CPLEX_STUDIO_DIR128"))
+        logger.info("CPLEX_STUDIO_DIR129: {}", System.getenv("CPLEX_STUDIO_DIR129"))
         logger.info("CPLEX_STUDIO_KEY set: {}", if (System.getenv("CPLEX_STUDIO_KEY") != null) "True" else "False")
 
         logger.info("For now, let's just run a test to make sure all dependencies are in place...")
