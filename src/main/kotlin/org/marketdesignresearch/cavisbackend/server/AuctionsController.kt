@@ -12,6 +12,7 @@ import java.util.*
 
 data class AuctionSetting(val bidders: Set<XORBidder>, val goods: Set<SimpleGood>, val type: MechanismType)
 
+@CrossOrigin(origins = ["*"])
 @RestController
 class AuctionsController {
 
