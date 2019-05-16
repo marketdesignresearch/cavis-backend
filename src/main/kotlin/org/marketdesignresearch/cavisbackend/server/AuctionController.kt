@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import org.marketdesignresearch.cavisbackend.domains.Setting
 import org.marketdesignresearch.cavisbackend.management.SessionManagement
-import org.marketdesignresearch.mechlib.domain.Allocation
 import org.marketdesignresearch.mechlib.domain.Bundle
 import org.marketdesignresearch.mechlib.domain.BundleBid
 import org.marketdesignresearch.mechlib.domain.BundleEntry
@@ -22,6 +21,7 @@ import kotlin.collections.HashSet
 data class AuctionSetting(val setting: Setting, val type: MechanismType)
 data class JSONBid(val amount: BigDecimal, val bundle: Map<String, Int>)
 
+@CrossOrigin(origins = ["*"])
 @RestController
 class AuctionController {
 
