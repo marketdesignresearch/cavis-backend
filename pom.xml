@@ -52,6 +52,12 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <version>3.12.1</version>
+            <scope>test</scope>
+        </dependency>
 
         <!-- Optimization -->
         <dependency>
@@ -66,7 +72,7 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- Optimization -->
+        <!-- MechLib -->
         <dependency>
             <groupId>org.marketdesignresearch</groupId>
             <artifactId>mechlib</artifactId>
