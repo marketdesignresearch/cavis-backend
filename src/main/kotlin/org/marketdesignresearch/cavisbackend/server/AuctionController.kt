@@ -3,6 +3,7 @@ package org.marketdesignresearch.cavisbackend.server
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import org.marketdesignresearch.cavisbackend.domains.Setting
+import org.marketdesignresearch.cavisbackend.management.CreateAuctionResult
 import org.marketdesignresearch.cavisbackend.management.SessionManagement
 import org.marketdesignresearch.mechlib.domain.Bundle
 import org.marketdesignresearch.mechlib.domain.BundleBid
@@ -13,6 +14,7 @@ import org.marketdesignresearch.mechlib.domain.bid.Bids
 import org.marketdesignresearch.mechlib.mechanisms.AuctionResult
 import org.marketdesignresearch.mechlib.mechanisms.MechanismType
 import org.springframework.http.MediaType
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import java.math.BigDecimal
 import java.util.*
@@ -26,8 +28,8 @@ data class JSONBid(val amount: BigDecimal, val bundle: Map<String, Int>)
 class AuctionController {
 
     @PostMapping("/auctions", consumes = [MediaType.ALL_VALUE])
-    fun startAuction(@RequestBody body: AuctionSetting): UUID {
-        return SessionManagement.create(body.setting.toDomain(), body.type)
+    fun startAuction(@RequestBody body: AuctionSetting): ResponseEntity<CreateAuctionResult> {
+        return ResponseEntity.of(Optional.of(SessionManagement.create(body.setting.toDomain(), body.type)))
     }
 
     /*@PostMapping("/test", consumes = [MediaType.ALL_VALUE])
@@ -36,13 +38,13 @@ class AuctionController {
     }*/
 
     @GetMapping("/auctions/{uuid}")
-    fun getAuction(@PathVariable uuid: UUID): Auction? {
-        return SessionManagement.get(uuid)
+    fun getAuction(@PathVariable uuid: UUID): ResponseEntity<Auction> {
+        return ResponseEntity.of(Optional.ofNullable(SessionManagement.get(uuid)))
     }
 
     @PostMapping("/auctions/{uuid}/bids", consumes = [MediaType.ALL_VALUE])
-    fun addBids(@PathVariable uuid: UUID, @RequestBody bidderBids: Map<String, Set<JSONBid>>): String { // TODO: Have reasonable responses
-        val auction = SessionManagement.get(uuid) ?: return "Not found"
+    fun addBids(@PathVariable uuid: UUID, @RequestBody bidderBids: Map<String, Set<JSONBid>>): ResponseEntity<Auction> {
+        val auction = SessionManagement.get(uuid) ?: return ResponseEntity.notFound().build()
         val bids = Bids()
         bidderBids.forEach { (bidderId, jsonBids) ->
             run {
@@ -56,16 +58,13 @@ class AuctionController {
             }
         }
         auction.addRound(bids)
-        return "Bids added!"
+        return ResponseEntity.ok(auction)
     }
 
     @GetMapping("/auctions/{uuid}/result")
-    fun getAllocation(@PathVariable uuid: UUID): AuctionResult? {
-        val auction = SessionManagement.get(uuid) ?: return AuctionResult.NONE
-        auction.auctionResult
-        return auction.auctionResult
+    fun getAllocation(@PathVariable uuid: UUID): ResponseEntity<AuctionResult> {
+        return ResponseEntity.of(Optional.ofNullable(SessionManagement.get(uuid)?.auctionResult))
     }
-    // Get allocation /auctions/{uuid}/allocation
 
 }
 

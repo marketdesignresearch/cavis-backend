@@ -6,14 +6,17 @@ import org.marketdesignresearch.mechlib.mechanisms.MechanismType
 import java.util.*
 import kotlin.collections.HashMap
 
+data class CreateAuctionResult(val uuid: UUID, val auction: Auction)
+
 object SessionManagement {
 
     private val sessions: HashMap<UUID, Auction> = HashMap()
 
-    fun create(domain: Domain, type: MechanismType): UUID {
+    fun create(domain: Domain, type: MechanismType): CreateAuctionResult {
         val uuid = UUID.randomUUID()
-        sessions[uuid] = Auction(domain, type)
-        return uuid
+        val auction = Auction(domain, type)
+        sessions[uuid] = auction
+        return CreateAuctionResult(uuid, auction)
     }
 
     fun get(uuid: UUID): Auction? {
