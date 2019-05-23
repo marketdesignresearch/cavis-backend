@@ -20,7 +20,7 @@ import org.springframework.boot.jackson.JsonComponent
 
 @JsonComponent
 class GoodJsonSerialization {
-    // FIXME: For now, deserialize Good as SimpleGood. Think about a general way, e.g. like the Setting Interface
+    // FIXME: For now, deserialize Good as SimpleGood. Think about a general way, e.g. like the DomainWrapper Interface
     class SimpleGoodJsonDeserializer : JsonDeserializer<Good>() {
 
         @Throws(IOException::class, JsonProcessingException::class)

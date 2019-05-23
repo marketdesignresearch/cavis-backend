@@ -4,13 +4,13 @@ import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
 import org.springframework.test.context.junit4.SpringRunner
 import org.springframework.test.web.servlet.MockMvc
-import org.springframework.test.web.servlet.MvcResult
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
@@ -20,11 +20,13 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 @AutoConfigureMockMvc
 class ApiTests {
 
+    private val logger = LoggerFactory.getLogger(ApiTests::class.java)
+
     @Autowired
     lateinit var mvc: MockMvc
 
     @Test
-    fun unknownUuidShoudReturn404() {
+    fun unknownUuidShouldReturn404() {
         mvc.perform(get("/auctions/ded9ac81-bc30-4d3b-81a7-946bde6aa7de"))
                 .andExpect(status().isNotFound)
     }
@@ -83,20 +85,34 @@ class ApiTests {
                         .content(body().toString()))
                 .andExpect(status().isUnsupportedMediaType)
 
-        // Type missing
+        // MechanismType missing
         mvc.perform(
                 post("/auctions/")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(body().remove("type").toString()))
+                        .content(body().remove("mechanismType").toString()))
                 .andExpect(status().isBadRequest)
 
-        // Setting type missing
+        // DomainWrapper type missing
         mvc.perform(
                 post("/auctions/")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(body().put("setting", body().getJSONObject("setting").remove("type")).toString()))
+                        .content(body().put("domain", body().getJSONObject("domain").remove("type")).toString()))
                 .andExpect(status().isBadRequest)
 
+    }
+
+    @Test
+    fun shouldGetAuctions() {
+        val created1 = created()
+        val uuid1 = created1.getString("uuid")
+
+        val created2 = created()
+        val uuid2 = created2.getString("uuid")
+
+        mvc.perform(get("/auctions"))
+                .andExpect(status().isOk)
+                .andExpect(content().json("[{\"uuid\": $uuid1}, {\"uuid\": $uuid2}]"))
+                .andDo{result -> logger.info(result.response.contentAsString) }
     }
 
     @Test
@@ -119,11 +135,11 @@ class ApiTests {
     }
 
     private fun body(): JSONObject = JSONObject()
-                .put("setting", JSONObject()
+                .put("domain", JSONObject()
                         .put("type", "simple")
                         .put("bidders", JSONArray().put(JSONObject().put("id", "A")).put(JSONObject().put("id", "B")))
                         .put("goods", JSONArray().put(JSONObject().put("id", "item"))))
-                .put("type", "SINGLE_ITEM_SECOND_PRICE")
+                .put("mechanismType", "SINGLE_ITEM_SECOND_PRICE")
 
     private fun created(): JSONObject = JSONObject(mvc.perform(
             post("/auctions/")

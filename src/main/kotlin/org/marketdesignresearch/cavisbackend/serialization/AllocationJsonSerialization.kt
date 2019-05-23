@@ -22,7 +22,7 @@ class AllocationJsonSerialization {
             allocation.tradesMap.forEach {
                 jsonGenerator.writeObjectFieldStart(it.key.id)
                 jsonGenerator.writeNumberField("value", it.value.value)
-                jsonGenerator.writeObjectFieldStart("items")
+                jsonGenerator.writeObjectFieldStart("goods")
                 it.value.bundle.bundleEntries.forEach { e -> jsonGenerator.writeNumberField(e.good.id, e.amount) }
                 jsonGenerator.writeEndObject()
                 jsonGenerator.writeEndObject()
