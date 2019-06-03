@@ -20,8 +20,10 @@ object SessionManagement {
         return AuctionWrapper(uuid, auction)
     }
 
-    fun get(uuid: UUID): Auction? {
-        return sessions[uuid]
+    fun get(uuid: UUID): AuctionWrapper? {
+        val auction = sessions[uuid]
+        if (auction != null) return AuctionWrapper(uuid, auction)
+        return null
     }
 
     fun get(): Set<AuctionWrapper> {

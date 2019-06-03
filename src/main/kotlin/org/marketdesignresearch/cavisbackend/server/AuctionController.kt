@@ -22,6 +22,7 @@ import kotlin.collections.HashSet
 
 data class AuctionSetting(val domain: DomainWrapper, val mechanismType: MechanismType)
 data class JSONBid(val amount: BigDecimal, val bundle: Map<String, Int>)
+data class ResetRequest(val round: Int)
 
 @CrossOrigin(origins = ["*"])
 @RestController
@@ -43,13 +44,14 @@ class AuctionController {
     }*/
 
     @GetMapping("/auctions/{uuid}")
-    fun getAuction(@PathVariable uuid: UUID): ResponseEntity<Auction> {
+    fun getAuction(@PathVariable uuid: UUID): ResponseEntity<AuctionWrapper> {
         return ResponseEntity.of(Optional.ofNullable(SessionManagement.get(uuid)))
     }
 
     @PostMapping("/auctions/{uuid}/bids", consumes = [MediaType.ALL_VALUE])
-    fun addBids(@PathVariable uuid: UUID, @RequestBody bidderBids: Map<String, Set<JSONBid>>): ResponseEntity<Auction> {
-        val auction = SessionManagement.get(uuid) ?: return ResponseEntity.notFound().build()
+    fun addBids(@PathVariable uuid: UUID, @RequestBody bidderBids: Map<String, Set<JSONBid>>): ResponseEntity<AuctionWrapper> {
+        val auctionWrapper = SessionManagement.get(uuid) ?: return ResponseEntity.notFound().build()
+        val auction = auctionWrapper.auction
         val bids = Bids()
         bidderBids.forEach { (bidderId, jsonBids) ->
             run {
@@ -63,12 +65,27 @@ class AuctionController {
             }
         }
         auction.addRound(bids)
-        return ResponseEntity.ok(auction)
+        // TODO: For now, we get result directly. I'll have to think about whether
+        //  I should make this the default in the MechLib, as for most auctions the result will be quickly available
+        val result = auction.auctionResult
+        return ResponseEntity.ok(auctionWrapper)
     }
+
+    @PutMapping("/auctions/{uuid}/reset")
+    fun resetAuction(@PathVariable uuid: UUID, @RequestBody body: ResetRequest): ResponseEntity<AuctionWrapper> {
+        val auctionWrapper = SessionManagement.get(uuid) ?: return ResponseEntity.notFound().build()
+        try {
+            auctionWrapper.auction.resetToRound(body.round)
+        } catch(e: IllegalArgumentException) {
+            return ResponseEntity.badRequest().build()
+        }
+        return ResponseEntity.ok(auctionWrapper)
+    }
+
 
     @GetMapping("/auctions/{uuid}/result")
     fun getAllocation(@PathVariable uuid: UUID): ResponseEntity<AuctionResult> {
-        return ResponseEntity.of(Optional.ofNullable(SessionManagement.get(uuid)?.auctionResult))
+        return ResponseEntity.of(Optional.ofNullable(SessionManagement.get(uuid)?.auction?.auctionResult))
     }
 
 }

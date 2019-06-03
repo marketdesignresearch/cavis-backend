@@ -9,15 +9,18 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
+import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.junit4.SpringRunner
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 
 @RunWith(SpringRunner::class)
 @SpringBootTest
 @AutoConfigureMockMvc
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 class ApiTests {
 
     private val logger = LoggerFactory.getLogger(ApiTests::class.java)
@@ -36,27 +39,11 @@ class ApiTests {
 
         mvc.perform(
                 post("/auctions/")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(body().toString()))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body().toString()))
                 .andExpect(status().isOk)
                 .andExpect(jsonPath("$.uuid").exists())
                 .andExpect(jsonPath("$.uuid").isString)
-                .andExpect(content().json(
-                        "{" +
-                        "    \"auction\": {" +
-                        "        \"domain\": {" +
-                        "            \"bidders\": [" +
-                        "                {\"id\": \"A\"}," +
-                        "                {\"id\": \"B\"}" +
-                        "            ]," +
-                        "            \"goods\": [" +
-                        "                {\"id\": \"item\",\"availability\": 1,\"dummyGood\": false}" +
-                        "            ]" +
-                        "        }," +
-                        "        \"mechanismType\": \"SINGLE_ITEM_SECOND_PRICE\"" +
-                        "    }" +
-                        "}"))
-                .andExpect(jsonPath("$.auction").exists())
                 .andExpect(jsonPath("$.auction.domain").exists())
                 .andExpect(jsonPath("$.auction.domain.bidders").exists())
                 .andExpect(jsonPath("$.auction.domain.bidders[0].id").isString)
@@ -72,6 +59,9 @@ class ApiTests {
                 .andExpect(jsonPath("$.auction.domain.goods[0].dummyGood").isBoolean)
                 .andExpect(jsonPath("$.auction.domain.goods[0].dummyGood").value(false))
                 .andExpect(jsonPath("$.auction.mechanismType").value("SINGLE_ITEM_SECOND_PRICE"))
+                .andExpect(jsonPath("$.auction.rounds").isArray)
+                .andExpect(jsonPath("$.auction.rounds").isEmpty)
+                .andDo { result -> logger.info(result.response.contentAsString) }
 
     }
 
@@ -111,8 +101,8 @@ class ApiTests {
 
         mvc.perform(get("/auctions"))
                 .andExpect(status().isOk)
-                .andExpect(content().json("[{\"uuid\": $uuid1}, {\"uuid\": $uuid2}]"))
-                .andDo{result -> logger.info(result.response.contentAsString) }
+                .andExpect(jsonPath("$").isArray)
+                .andDo { result -> logger.info(result.response.contentAsString) }
     }
 
     @Test
@@ -125,21 +115,72 @@ class ApiTests {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(bids().toString()))
                 .andExpect(status().isOk)
-                .andExpect(jsonPath("$.allocation").exists())
+                .andExpect(jsonPath("$.uuid").value(uuid))
+                .andExpect(jsonPath("$.auction.rounds").isNotEmpty)
+                .andExpect(jsonPath("$.auction.rounds[0].auctionResult").exists())
+                .andExpect(jsonPath("$.auction.rounds[0].auctionResult.allocation.B.value").value(12))
+                .andExpect(jsonPath("$.auction.rounds[0].auctionResult.allocation.B.goods.item").value(1))
+                .andExpect(jsonPath("$.auction.rounds[0].auctionResult.payments.totalPayments").value(10))
+                .andExpect(jsonPath("$.auction.rounds[0].auctionResult.payments.B").value(10))
+                .andDo { result -> logger.info(result.response.contentAsString) }
+    }
+
+    @Test
+    fun `Should reset auction`() {
+        val created = created()
+        val uuid = created.getString("uuid")
+
+        for (i in 0..4) {
+            mvc.perform(
+                    post("/auctions/$uuid/bids")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(bids().toString()))
+                    .andExpect(status().isOk)
+        }
+
+        mvc.perform(get("/auctions/$uuid/"))
+                .andExpect(status().isOk)
+                .andExpect(jsonPath("$.auction.rounds").isNotEmpty)
+                .andExpect(jsonPath("$.auction.rounds").isArray)
+                .andExpect(jsonPath("$.auction.rounds[0].bids").exists())
+                .andExpect(jsonPath("$.auction.rounds[1].bids").exists())
+                .andExpect(jsonPath("$.auction.rounds[2].bids").exists())
+                .andExpect(jsonPath("$.auction.rounds[3].bids").exists())
+                .andExpect(jsonPath("$.auction.rounds[4].bids").exists())
+
+        mvc.perform(
+                put("/auctions/$uuid/reset")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"round\": 3}"))
+                .andExpect(status().isOk)
+                .andExpect(jsonPath("$.auction.rounds").isNotEmpty)
+                .andExpect(jsonPath("$.auction.rounds").isArray)
+                .andExpect(jsonPath("$.auction.rounds[0].bids").exists())
+                .andExpect(jsonPath("$.auction.rounds[1].bids").exists())
+                .andExpect(jsonPath("$.auction.rounds[2].bids").exists())
+                .andExpect(jsonPath("$.auction.rounds[3].bids").doesNotExist())
+                .andExpect(jsonPath("$.auction.rounds[4].bids").doesNotExist())
+
+
     }
 
     @Test
     fun shouldGetResult() {
         mvc.perform(get("/auctions/${finished()}/result"))
                 .andExpect(status().isOk)
+                .andExpect(jsonPath("$.allocation.B.value").value(12))
+                .andExpect(jsonPath("$.allocation.B.goods.item").value(1))
+                .andExpect(jsonPath("$.payments.totalPayments").value(10))
+                .andExpect(jsonPath("$.payments.B").value(10))
+                .andDo { result -> logger.info(result.response.contentAsString) }
     }
 
     private fun body(): JSONObject = JSONObject()
-                .put("domain", JSONObject()
-                        .put("type", "simple")
-                        .put("bidders", JSONArray().put(JSONObject().put("id", "A")).put(JSONObject().put("id", "B")))
-                        .put("goods", JSONArray().put(JSONObject().put("id", "item"))))
-                .put("mechanismType", "SINGLE_ITEM_SECOND_PRICE")
+            .put("domain", JSONObject()
+                    .put("type", "simple")
+                    .put("bidders", JSONArray().put(JSONObject().put("id", "A")).put(JSONObject().put("id", "B")))
+                    .put("goods", JSONArray().put(JSONObject().put("id", "item"))))
+            .put("mechanismType", "SINGLE_ITEM_SECOND_PRICE")
 
     private fun created(): JSONObject = JSONObject(mvc.perform(
             post("/auctions/")
