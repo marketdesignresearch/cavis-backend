@@ -1,0 +1,23 @@
+version: '3'
+
+services:
+  api:
+    build: .
+    depends_on:
+      - mongo
+    environment:
+      SPRING_DATA_MONGODB_HOST: mongo
+      CPLEX_STUDIO_DIR129: /opt/ibm/ILOG/CPLEX_Studio_Community129
+
+  mongo:
+    image: mongo
+    volumes:
+      - mongodb:/data/db
+
+  frontend:
+    build: ../cavis-frontend
+    depends_on:
+      - api
+
+volumes:
+  mongodb:
