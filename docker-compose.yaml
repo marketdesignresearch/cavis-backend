@@ -4,7 +4,7 @@ services:
   api:
     build: .
     environment:
-      CPLEX_STUDIO_DIR129: /opt/ibm/ILOG/CPLEX_Studio_Community129
+      CPLEX_STUDIO_DIR129: /opt/ibm/ILOG/CPLEX_Studio129
     ports:
       - 8080:8080
 
