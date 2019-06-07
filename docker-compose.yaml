@@ -9,7 +9,10 @@ services:
       - 8080:8080
 
   frontend:
-    build: ../cavis-frontend
+    build:
+      context: ../cavis-frontend
+      args:
+        VUE_APP_API_URL: http://159.89.1.1:8080
     depends_on:
       - api
     ports:

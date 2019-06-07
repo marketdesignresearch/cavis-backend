@@ -3,6 +3,7 @@ WORKDIR /usr/src/app
 COPY pom.xml pom.xml
 RUN mvn verify clean --fail-never
 COPY --from=cplex:12.9 /opt/ibm/ILOG/CPLEX_Studio129/cplex/lib/cplex.jar cplex.jar
+COPY --from=cplex:12.9 /ibm/ILOG/CPLEX_Studio129/cplex/lib/cplex.jar cplex.jar
 COPY src/ src/
 RUN mvn install:install-file -Dfile=cplex.jar -DgroupId=cplex -DartifactId=cplex -Dversion=12.9 -Dpackaging=jar \
         && rm cplex.jar \
