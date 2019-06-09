@@ -27,7 +27,7 @@ class BidsJsonSerialization {
                     jsonGenerator.writeStringField("id", bundleBid.id)
                     jsonGenerator.writeNumberField("amount", bundleBid.amount)
                     jsonGenerator.writeObjectField("bundle", bundleBid.bundle)
-                    jsonGenerator.writeStringField("bidderId", bidder.id)
+                    jsonGenerator.writeStringField("bidderId", bidder.id.toString())
                     jsonGenerator.writeEndObject()
                 }
             }

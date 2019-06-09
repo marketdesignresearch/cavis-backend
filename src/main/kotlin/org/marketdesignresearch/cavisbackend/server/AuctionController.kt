@@ -49,7 +49,7 @@ class AuctionController {
     }
 
     @PostMapping("/auctions/{uuid}/bids", consumes = [MediaType.ALL_VALUE])
-    fun addBids(@PathVariable uuid: UUID, @RequestBody bidderBids: Map<String, Set<JSONBid>>): ResponseEntity<AuctionWrapper> {
+    fun addBids(@PathVariable uuid: UUID, @RequestBody bidderBids: Map<UUID, Set<JSONBid>>): ResponseEntity<AuctionWrapper> {
         val auctionWrapper = SessionManagement.get(uuid) ?: return ResponseEntity.notFound().build()
         val auction = auctionWrapper.auction
         val bids = Bids()

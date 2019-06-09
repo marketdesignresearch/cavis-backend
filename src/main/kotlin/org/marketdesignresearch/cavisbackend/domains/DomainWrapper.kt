@@ -10,7 +10,8 @@ import org.marketdesignresearch.mechlib.domain.Domain
         include = JsonTypeInfo.As.PROPERTY,
         property = "type")
 @JsonSubTypes(
-    Type(value = SimpleDomain::class, name = "simple")
+    Type(value = AdditiveValueDomain::class, name = "additiveValue"),
+    Type(value = UnitDemandValueDomain::class, name = "unitDemandValue")
 )
 interface DomainWrapper {
     fun toDomain(): Domain
