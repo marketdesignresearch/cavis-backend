@@ -59,7 +59,7 @@ class ApiTests {
                 .andExpect(jsonPath("$.auction.domain.goods[0].availability").value(1))
                 .andExpect(jsonPath("$.auction.domain.goods[0].dummyGood").isBoolean)
                 .andExpect(jsonPath("$.auction.domain.goods[0].dummyGood").value(false))
-                .andExpect(jsonPath("$.auction.mechanismType").value("SINGLE_ITEM_SECOND_PRICE"))
+                .andExpect(jsonPath("$.auction.mechanismType").value("SECOND_PRICE"))
                 .andExpect(jsonPath("$.auction.rounds").isArray)
                 .andExpect(jsonPath("$.auction.rounds").isEmpty)
                 .andDo { result -> logger.info(result.response.contentAsString) }
@@ -120,11 +120,11 @@ class ApiTests {
                 .andExpect(status().isOk)
                 .andExpect(jsonPath("$.uuid").value(uuid))
                 .andExpect(jsonPath("$.auction.rounds").isNotEmpty)
-                .andExpect(jsonPath("$.auction.rounds[0].auctionResult").exists())
-                .andExpect(jsonPath("$.auction.rounds[0].auctionResult.allocation.$bidder2Uuid.value").value(12))
-                .andExpect(jsonPath("$.auction.rounds[0].auctionResult.allocation.$bidder2Uuid.goods.item").value(1))
-                .andExpect(jsonPath("$.auction.rounds[0].auctionResult.payments.totalPayments").value(10))
-                .andExpect(jsonPath("$.auction.rounds[0].auctionResult.payments.$bidder2Uuid").value(10))
+                .andExpect(jsonPath("$.auction.rounds[0].mechanismResult").exists())
+                .andExpect(jsonPath("$.auction.rounds[0].mechanismResult.allocation.$bidder2Uuid.value").value(12))
+                .andExpect(jsonPath("$.auction.rounds[0].mechanismResult.allocation.$bidder2Uuid.goods.item").value(1))
+                .andExpect(jsonPath("$.auction.rounds[0].mechanismResult.payments.totalPayments").value(10))
+                .andExpect(jsonPath("$.auction.rounds[0].mechanismResult.payments.$bidder2Uuid").value(10))
                 .andDo { result -> logger.info(result.response.contentAsString) }
     }
 
@@ -189,7 +189,7 @@ class ApiTests {
                             .put(JSONObject()
                                     .put("name", "B")))
                     .put("goods", JSONArray().put(JSONObject().put("id", "item"))))
-            .put("mechanismType", "SINGLE_ITEM_SECOND_PRICE")
+            .put("mechanismType", "SECOND_PRICE")
 
     private fun created(): JSONObject = JSONObject(mvc.perform(
             post("/auctions/")

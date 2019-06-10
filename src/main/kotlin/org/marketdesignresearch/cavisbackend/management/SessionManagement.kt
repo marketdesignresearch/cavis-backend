@@ -1,7 +1,7 @@
 package org.marketdesignresearch.cavisbackend.management
 
+import org.marketdesignresearch.mechlib.auction.Auction
 import org.marketdesignresearch.mechlib.domain.Domain
-import org.marketdesignresearch.mechlib.domain.auction.Auction
 import org.marketdesignresearch.mechlib.mechanisms.MechanismType
 import java.util.*
 import java.util.stream.Collectors
@@ -15,7 +15,7 @@ object SessionManagement {
 
     fun create(domain: Domain, type: MechanismType): AuctionWrapper {
         val uuid = UUID.randomUUID()
-        val auction = Auction(domain, type)
+        val auction = Auction(domain, type) // TODO: Use AuctionFactory to start sequential / CCA / PVM auction
         sessions[uuid] = auction
         return AuctionWrapper(uuid, auction)
     }

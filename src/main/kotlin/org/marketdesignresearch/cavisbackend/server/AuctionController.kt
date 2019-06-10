@@ -8,10 +8,9 @@ import org.marketdesignresearch.cavisbackend.management.SessionManagement
 import org.marketdesignresearch.mechlib.domain.Bundle
 import org.marketdesignresearch.mechlib.domain.BundleBid
 import org.marketdesignresearch.mechlib.domain.BundleEntry
-import org.marketdesignresearch.mechlib.domain.auction.Auction
 import org.marketdesignresearch.mechlib.domain.bid.Bid
 import org.marketdesignresearch.mechlib.domain.bid.Bids
-import org.marketdesignresearch.mechlib.mechanisms.AuctionResult
+import org.marketdesignresearch.mechlib.mechanisms.MechanismResult
 import org.marketdesignresearch.mechlib.mechanisms.MechanismType
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
@@ -48,7 +47,7 @@ class AuctionController {
         return ResponseEntity.of(Optional.ofNullable(SessionManagement.get(uuid)))
     }
 
-    @PostMapping("/auctions/{uuid}/bids", consumes = [MediaType.ALL_VALUE])
+    @PostMapping("/auctions/{uuid}/bids", consumes = [MediaType.APPLICATION_JSON_VALUE])
     fun addBids(@PathVariable uuid: UUID, @RequestBody bidderBids: Map<UUID, Set<JSONBid>>): ResponseEntity<AuctionWrapper> {
         val auctionWrapper = SessionManagement.get(uuid) ?: return ResponseEntity.notFound().build()
         val auction = auctionWrapper.auction
@@ -67,7 +66,7 @@ class AuctionController {
         auction.addRound(bids)
         // TODO: For now, we get result directly. I'll have to think about whether
         //  I should make this the default in the MechLib, as for most auctions the result will be quickly available
-        val result = auction.auctionResult
+        val result = auction.mechanismResult
         return ResponseEntity.ok(auctionWrapper)
     }
 
@@ -84,8 +83,8 @@ class AuctionController {
 
 
     @GetMapping("/auctions/{uuid}/result")
-    fun getAllocation(@PathVariable uuid: UUID): ResponseEntity<AuctionResult> {
-        return ResponseEntity.of(Optional.ofNullable(SessionManagement.get(uuid)?.auction?.auctionResult))
+    fun getAllocation(@PathVariable uuid: UUID): ResponseEntity<MechanismResult> {
+        return ResponseEntity.of(Optional.ofNullable(SessionManagement.get(uuid)?.auction?.mechanismResult))
     }
 
 }

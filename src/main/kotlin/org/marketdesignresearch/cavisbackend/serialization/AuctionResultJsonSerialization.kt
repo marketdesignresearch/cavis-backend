@@ -4,8 +4,7 @@ import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.JsonSerializer
 import com.fasterxml.jackson.databind.SerializerProvider
-import org.marketdesignresearch.mechlib.domain.Allocation
-import org.marketdesignresearch.mechlib.mechanisms.AuctionResult
+import org.marketdesignresearch.mechlib.mechanisms.MechanismResult
 import org.springframework.boot.jackson.JsonComponent
 import java.io.IOException
 
@@ -13,10 +12,10 @@ import java.io.IOException
 @JsonComponent
 class AuctionResultJsonSerialization {
 
-    class AuctionResultJsonSerializer : JsonSerializer<AuctionResult>() {
+    class AuctionResultJsonSerializer : JsonSerializer<MechanismResult>() {
 
         @Throws(IOException::class, JsonProcessingException::class)
-        override fun serialize(auctionResult: AuctionResult, jsonGenerator: JsonGenerator,
+        override fun serialize(auctionResult: MechanismResult, jsonGenerator: JsonGenerator,
                                serializerProvider: SerializerProvider) {
 
             jsonGenerator.writeStartObject()
