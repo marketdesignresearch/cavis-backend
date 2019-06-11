@@ -19,7 +19,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 @RunWith(SpringRunner::class)
 @SpringBootTest
 @AutoConfigureMockMvc
-@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
+//@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 class ApiTests {
 
     private val logger = LoggerFactory.getLogger(ApiTests::class.java)
@@ -43,6 +43,7 @@ class ApiTests {
                 .andExpect(status().isOk)
                 .andExpect(jsonPath("$.uuid").exists())
                 .andExpect(jsonPath("$.uuid").isString)
+                .andExpect(jsonPath("$.auctionType").value("SINGLE_ITEM_SECOND_PRICE"))
                 .andExpect(jsonPath("$.auction.domain").exists())
                 .andExpect(jsonPath("$.auction.domain.bidders").exists())
                 .andExpect(jsonPath("$.auction.domain.bidders[0].id").isString)
@@ -59,7 +60,6 @@ class ApiTests {
                 .andExpect(jsonPath("$.auction.domain.goods[0].availability").value(1))
                 .andExpect(jsonPath("$.auction.domain.goods[0].dummyGood").isBoolean)
                 .andExpect(jsonPath("$.auction.domain.goods[0].dummyGood").value(false))
-                .andExpect(jsonPath("$.auction.mechanismType").value("SECOND_PRICE"))
                 .andExpect(jsonPath("$.auction.rounds").isArray)
                 .andExpect(jsonPath("$.auction.rounds").isEmpty)
                 .andDo { result -> logger.info(result.response.contentAsString) }
@@ -76,11 +76,11 @@ class ApiTests {
                         .content(body().toString()))
                 .andExpect(status().isUnsupportedMediaType)
 
-        // MechanismType missing
+        // Auction type missing
         mvc.perform(
                 post("/auctions/")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(body().remove("mechanismType").toString()))
+                        .content(body().remove("auctionType").toString()))
                 .andExpect(status().isBadRequest)
 
         // DomainWrapper type missing
@@ -189,7 +189,7 @@ class ApiTests {
                             .put(JSONObject()
                                     .put("name", "B")))
                     .put("goods", JSONArray().put(JSONObject().put("id", "item"))))
-            .put("mechanismType", "SECOND_PRICE")
+            .put("auctionType", "SINGLE_ITEM_SECOND_PRICE")
 
     private fun created(): JSONObject = JSONObject(mvc.perform(
             post("/auctions/")

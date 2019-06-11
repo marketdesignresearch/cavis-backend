@@ -5,13 +5,13 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo
 import org.marketdesignresearch.cavisbackend.domains.DomainWrapper
 import org.marketdesignresearch.cavisbackend.management.AuctionWrapper
 import org.marketdesignresearch.cavisbackend.management.SessionManagement
+import org.marketdesignresearch.mechlib.auction.AuctionFactory
 import org.marketdesignresearch.mechlib.domain.Bundle
 import org.marketdesignresearch.mechlib.domain.BundleBid
 import org.marketdesignresearch.mechlib.domain.BundleEntry
 import org.marketdesignresearch.mechlib.domain.bid.Bid
 import org.marketdesignresearch.mechlib.domain.bid.Bids
 import org.marketdesignresearch.mechlib.mechanisms.MechanismResult
-import org.marketdesignresearch.mechlib.mechanisms.MechanismType
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -19,7 +19,7 @@ import java.math.BigDecimal
 import java.util.*
 import kotlin.collections.HashSet
 
-data class AuctionSetting(val domain: DomainWrapper, val mechanismType: MechanismType)
+data class AuctionSetting(val domain: DomainWrapper, val auctionType: AuctionFactory)
 data class JSONBid(val amount: BigDecimal, val bundle: Map<String, Int>)
 data class ResetRequest(val round: Int)
 
@@ -29,7 +29,7 @@ class AuctionController {
 
     @PostMapping("/auctions", consumes = [MediaType.APPLICATION_JSON_VALUE])
     fun startAuction(@RequestBody body: AuctionSetting): ResponseEntity<AuctionWrapper> {
-        return ResponseEntity.of(Optional.of(SessionManagement.create(body.domain.toDomain(), body.mechanismType)))
+        return ResponseEntity.of(Optional.of(SessionManagement.create(body.domain.toDomain(), body.auctionType)))
     }
 
     @GetMapping("/auctions")
