@@ -16,7 +16,6 @@ import java.math.BigDecimal
  * The strict definition of a unit demand value is the following:
  * If one or more items are won, I have value X. If no item is won, I have value 0.
  * This is sub-additive, which is why we cannot use an OR domain.
- * The current implementation adds
  */
 data class UnitDemandValueDomain(val bidders: List<PerItemBidder>, val goods: List<SimpleGood>): DomainWrapper {
 
@@ -35,9 +34,11 @@ data class UnitDemandValueDomain(val bidders: List<PerItemBidder>, val goods: Li
             val amount = distribution.sample().toLong()
             val value = XORValue()
             for (combination in goods.powerset()) {
-                val bundleEntries = combination.map { g -> BundleEntry(g, 1) }.toHashSet()
-                val bundle = Bundle(bundleEntries)
-                value.addBundleValue(BundleValue(BigDecimal.valueOf(amount), bundle))
+                if (combination.isNotEmpty()) {
+                    val bundleEntries = combination.map { g -> BundleEntry(g, 1) }.toHashSet()
+                    val bundle = Bundle(bundleEntries)
+                    value.addBundleValue(BundleValue(BigDecimal.valueOf(amount), bundle))
+                }
             }
             xorBidders.add(XORBidder(bidder.name, value))
         }
