@@ -1,7 +1,5 @@
 package org.marketdesignresearch.cavisbackend.server
 
-import com.fasterxml.jackson.annotation.JsonSubTypes
-import com.fasterxml.jackson.annotation.JsonTypeInfo
 import org.marketdesignresearch.cavisbackend.domains.DomainWrapper
 import org.marketdesignresearch.cavisbackend.management.AuctionWrapper
 import org.marketdesignresearch.cavisbackend.management.SessionManagement
@@ -66,7 +64,7 @@ class AuctionController {
         auction.addRound(bids)
         // TODO: For now, we get result directly. I'll have to think about whether
         //  I should make this the default in the MechLib, as for most auctions the result will be quickly available
-        val result = auction.mechanismResult
+        val result = auction.getAuctionResultAtRound(auction.numberOfRounds - 1)
         return ResponseEntity.ok(auctionWrapper)
     }
 
@@ -87,31 +85,4 @@ class AuctionController {
         return ResponseEntity.of(Optional.ofNullable(SessionManagement.get(uuid)?.auction?.mechanismResult))
     }
 
-}
-
-
-data class AnimalProtocol(val animal: Animal)
-
-@JsonTypeInfo(
-        use = JsonTypeInfo.Id.NAME,
-        include = JsonTypeInfo.As.PROPERTY,
-        property = "type")
-@JsonSubTypes(
-        JsonSubTypes.Type(value = Cat::class, name = "cat"),
-        JsonSubTypes.Type(value = Dog::class, name = "dog")
-)
-interface Animal {
-    fun callName(): String
-}
-
-data class Cat(val name: String): Animal {
-    override fun callName(): String {
-        return name
-    }
-}
-
-data class Dog(val firstName: String, val secondName: String): Animal {
-    override fun callName(): String {
-        return "First: $firstName, Second: $secondName"
-    }
 }

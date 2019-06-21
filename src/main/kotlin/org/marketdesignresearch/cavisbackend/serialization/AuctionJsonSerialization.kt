@@ -22,10 +22,12 @@ class AuctionJsonSerialization {
             jsonGenerator.writeObjectField("domain", auction.domain) // TODO: Add keyword for domain
             jsonGenerator.writeStringField("mechanismType", auction.mechanismType.mechanismName)
             jsonGenerator.writeArrayFieldStart("rounds")
-            for (i in 0 until auction.rounds) {
+            for (i in 0 until auction.numberOfRounds) {
                 jsonGenerator.writeObject(auction.getRound(i))
             }
             jsonGenerator.writeEndArray()
+            jsonGenerator.writeObjectField("nextGoods", auction.nextGoods().map{it.id})
+            jsonGenerator.writeObjectField("allowedNumberOfBids", auction.allowedNumberOfBids())
             jsonGenerator.writeEndObject()
         }
     }
