@@ -7,8 +7,11 @@ import org.marketdesignresearch.mechlib.auction.AuctionFactory
 import org.marketdesignresearch.mechlib.domain.Bundle
 import org.marketdesignresearch.mechlib.domain.BundleBid
 import org.marketdesignresearch.mechlib.domain.BundleEntry
+import org.marketdesignresearch.mechlib.domain.Good
 import org.marketdesignresearch.mechlib.domain.bid.Bid
 import org.marketdesignresearch.mechlib.domain.bid.Bids
+import org.marketdesignresearch.mechlib.domain.price.LinearPrices
+import org.marketdesignresearch.mechlib.domain.price.Price
 import org.marketdesignresearch.mechlib.mechanisms.MechanismResult
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
@@ -20,6 +23,8 @@ import kotlin.collections.HashSet
 data class AuctionSetting(val domain: DomainWrapper, val auctionType: AuctionFactory)
 data class JSONBid(val amount: BigDecimal, val bundle: Map<String, Int>)
 data class ResetRequest(val round: Int)
+data class JSONDemandQuery(val prices: Map<String, Double> = emptyMap(), val bidders: List<String> = emptyList(), val numberOfBundles: Int = 1)
+data class JSONValueQuery(val bundle: Map<String, Int>, val bidders: List<String> = emptyList())
 
 @CrossOrigin(origins = ["*"])
 @RestController
@@ -43,6 +48,32 @@ class AuctionController {
     @GetMapping("/auctions/{uuid}")
     fun getAuction(@PathVariable uuid: UUID): ResponseEntity<AuctionWrapper> {
         return ResponseEntity.of(Optional.ofNullable(SessionManagement.get(uuid)))
+    }
+
+    @PostMapping("/auctions/{uuid}/demandquery")
+    fun postDemandQuery(@PathVariable uuid: UUID, @RequestBody body: JSONDemandQuery): ResponseEntity<Map<String, List<Bundle>>> {
+        val auctionWrapper = SessionManagement.get(uuid) ?: return ResponseEntity.notFound().build()
+        val auction = auctionWrapper.auction
+        val priceMap = hashMapOf<Good, Price>()
+        body.prices.forEach{ priceMap[auction.getGood(it.key)] = Price.of(it.value) }
+        val prices = LinearPrices(priceMap)
+        val bidders = if (body.bidders.isEmpty()) auction.domain.bidders else body.bidders.map{auction.getBidder(UUID.fromString(it))}
+        val result = hashMapOf<String, List<Bundle>>()
+        bidders.forEach { result[it.id.toString()] = it.getBestBundles(prices, body.numberOfBundles) }
+        return ResponseEntity.ok(result)
+    }
+
+    @PostMapping("/auctions/{uuid}/valuequery")
+    fun postValueQuery(@PathVariable uuid: UUID, @RequestBody body: JSONValueQuery): ResponseEntity<Map<String, BigDecimal>> {
+        val auctionWrapper = SessionManagement.get(uuid) ?: return ResponseEntity.notFound().build()
+        val auction = auctionWrapper.auction
+        val bundleEntries = hashSetOf<BundleEntry>()
+        body.bundle.forEach { (k, v) -> bundleEntries.add(BundleEntry(auction.getGood(k), v)) }
+        val bundle = Bundle(bundleEntries)
+        val bidders = if (body.bidders.isEmpty()) auction.domain.bidders else body.bidders.map{auction.getBidder(UUID.fromString(it))}
+        val result = hashMapOf<String, BigDecimal>()
+        bidders.forEach { result[it.id.toString()] = it.getValue(bundle) }
+        return ResponseEntity.ok(result)
     }
 
     @PostMapping("/auctions/{uuid}/bids", consumes = [MediaType.APPLICATION_JSON_VALUE])
