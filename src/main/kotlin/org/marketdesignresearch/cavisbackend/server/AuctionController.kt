@@ -4,6 +4,7 @@ import org.marketdesignresearch.cavisbackend.domains.DomainWrapper
 import org.marketdesignresearch.cavisbackend.management.AuctionWrapper
 import org.marketdesignresearch.cavisbackend.management.SessionManagement
 import org.marketdesignresearch.mechlib.auction.AuctionFactory
+import org.marketdesignresearch.mechlib.auction.IllegalBidException
 import org.marketdesignresearch.mechlib.domain.Bundle
 import org.marketdesignresearch.mechlib.domain.BundleBid
 import org.marketdesignresearch.mechlib.domain.BundleEntry
@@ -40,11 +41,6 @@ class AuctionController {
         return ResponseEntity.of(Optional.of(SessionManagement.get()))
     }
 
-    /*@PostMapping("/test", consumes = [MediaType.ALL_VALUE])
-    fun test(@RequestBody body: AnimalProtocol): String {
-        return body.animal.callName()
-    }*/
-
     @GetMapping("/auctions/{uuid}")
     fun getAuction(@PathVariable uuid: UUID): ResponseEntity<AuctionWrapper> {
         return ResponseEntity.of(Optional.ofNullable(SessionManagement.get(uuid)))
@@ -77,7 +73,7 @@ class AuctionController {
     }
 
     @PostMapping("/auctions/{uuid}/bids", consumes = [MediaType.APPLICATION_JSON_VALUE])
-    fun addBids(@PathVariable uuid: UUID, @RequestBody bidderBids: Map<UUID, Set<JSONBid>>): ResponseEntity<AuctionWrapper> {
+    fun addBids(@PathVariable uuid: UUID, @RequestBody bidderBids: Map<UUID, Set<JSONBid>>): ResponseEntity<Any> {
         val auctionWrapper = SessionManagement.get(uuid) ?: return ResponseEntity.notFound().build()
         val auction = auctionWrapper.auction
         val bids = Bids()
@@ -92,10 +88,33 @@ class AuctionController {
                 bids.setBid(auction.getBidder(bidderId), Bid(bundleBids))
             }
         }
-        auction.addRound(bids)
+        try {
+            auction.submitBids(bids)
+        } catch (e: IllegalBidException) {
+            return ResponseEntity.badRequest().body(e.message)
+        }
+        return ResponseEntity.ok(auctionWrapper)
+    }
+
+    @PostMapping("/auctions/{uuid}/close-round", consumes = [])
+    fun closeRound(@PathVariable uuid: UUID): ResponseEntity<AuctionWrapper> {
+        val auctionWrapper = SessionManagement.get(uuid) ?: return ResponseEntity.notFound().build()
+        val auction = auctionWrapper.auction
+        auction.closeRound()
         // TODO: For now, we get result directly. I'll have to think about whether
         //  I should make this the default in the MechLib, as for most auctions the result will be quickly available
-        val result = auction.getAuctionResultAtRound(auction.numberOfRounds - 1)
+        auction.getAuctionResultAtRound(auction.numberOfRounds - 1)
+        return ResponseEntity.ok(auctionWrapper)
+    }
+
+    @PostMapping("/auctions/{uuid}/advance", consumes = [])
+    fun advanceRound(@PathVariable uuid: UUID): ResponseEntity<AuctionWrapper> {
+        val auctionWrapper = SessionManagement.get(uuid) ?: return ResponseEntity.notFound().build()
+        val auction = auctionWrapper.auction
+        auction.nextRound()
+        // TODO: For now, we get result directly. I'll have to think about whether
+        //  I should make this the default in the MechLib, as for most auctions the result will be quickly available
+        auction.getAuctionResultAtRound(auction.numberOfRounds - 1)
         return ResponseEntity.ok(auctionWrapper)
     }
 

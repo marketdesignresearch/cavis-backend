@@ -21,7 +21,7 @@ class BundleJsonSerialization {
             jsonGenerator.writeStartArray()
             for (entry in bundle.bundleEntries) {
                 jsonGenerator.writeStartObject()
-                jsonGenerator.writeObjectField("good", entry.good.id)
+                jsonGenerator.writeStringField("good", entry.good.id)
                 jsonGenerator.writeNumberField("amount", entry.amount)
                 jsonGenerator.writeEndObject()
            }
