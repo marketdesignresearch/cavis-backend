@@ -192,25 +192,25 @@ class ApiTests {
 
         // No content
         mvc.perform(post("/auctions/$uuid/valuequery"))
-                .andExpect(status().isBadRequest)
                 .andDo { result -> logger.info("Request: {} | Response: {}", result.request.contentAsString, result.response.contentAsString) }
+                .andExpect(status().isBadRequest)
 
         // Empty content
         mvc.perform(
                 post("/auctions/$uuid/valuequery")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
-                .andExpect(status().isBadRequest)
                 .andDo { result -> logger.info("Request: {} | Response: {}", result.request.contentAsString, result.response.contentAsString) }
+                .andExpect(status().isBadRequest)
 
         mvc.perform(
                 post("/auctions/$uuid/valuequery")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(valueQueryContent.toString()))
+                .andDo { result -> logger.info("Request: {} | Response: {}", result.request.contentAsString, result.response.contentAsString) }
                 .andExpect(status().isOk)
                 .andExpect(jsonPath("$.$bidder1Uuid").isNumber)
                 .andExpect(jsonPath("$.$bidder2Uuid").doesNotExist())
-                .andDo { result -> logger.info("Request: {} | Response: {}", result.request.contentAsString, result.response.contentAsString) }
 
         mvc.perform(
                 post("/auctions/$uuid/valuequery")
@@ -225,10 +225,10 @@ class ApiTests {
                 post("/auctions/$uuid/valuequery")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"bundle\": {}}"))
+                .andDo { result -> logger.info("Request: {} | Response: {}", result.request.contentAsString, result.response.contentAsString) }
                 .andExpect(status().isOk)
                 .andExpect(jsonPath("$.$bidder1Uuid").isNumber)
                 .andExpect(jsonPath("$.$bidder2Uuid").isNumber)
-                .andDo { result -> logger.info("Request: {} | Response: {}", result.request.contentAsString, result.response.contentAsString) }
     }
 
     @Test
@@ -242,6 +242,13 @@ class ApiTests {
                 post("/auctions/$uuid/bids")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(bids(bidder1Uuid, bidder2Uuid).toString()))
+                .andDo { logger.info("Request: {} | Response: {}", it.request.contentAsString, it.response.contentAsString) }
+                .andExpect(status().isOk)
+                .andExpect(jsonPath("$.uuid").value(uuid))
+                .andExpect(jsonPath("$.auction.rounds").isEmpty)
+
+        mvc.perform(post("/auctions/$uuid/close-round"))
+                .andDo { logger.info("Request: {} | Response: {}", it.request.contentAsString, it.response.contentAsString) }
                 .andExpect(status().isOk)
                 .andExpect(jsonPath("$.uuid").value(uuid))
                 .andExpect(jsonPath("$.auction.rounds").isNotEmpty)
@@ -250,7 +257,6 @@ class ApiTests {
                 .andExpect(jsonPath("$.auction.rounds[0].mechanismResult.allocation.$bidder2Uuid.goods.item").value(1))
                 .andExpect(jsonPath("$.auction.rounds[0].mechanismResult.payments.totalPayments").value(10))
                 .andExpect(jsonPath("$.auction.rounds[0].mechanismResult.payments.$bidder2Uuid").value(10))
-                .andDo { result -> logger.info(result.response.contentAsString) }
     }
 
     @Test
@@ -266,9 +272,12 @@ class ApiTests {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(bids(bidder1Uuid, bidder2Uuid).toString()))
                     .andExpect(status().isOk)
+            mvc.perform(post("/auctions/$uuid/close-round"))
+                    .andExpect(status().isOk)
         }
 
         mvc.perform(get("/auctions/$uuid/"))
+                .andDo { logger.info("Request: {} | Response: {}", it.request.contentAsString, it.response.contentAsString) }
                 .andExpect(status().isOk)
                 .andExpect(jsonPath("$.auction.rounds").isNotEmpty)
                 .andExpect(jsonPath("$.auction.rounds").isArray)
@@ -282,6 +291,7 @@ class ApiTests {
                 put("/auctions/$uuid/reset")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"round\": 3}"))
+                .andDo { logger.info("Request: {} | Response: {}", it.request.contentAsString, it.response.contentAsString) }
                 .andExpect(status().isOk)
                 .andExpect(jsonPath("$.auction.rounds").isNotEmpty)
                 .andExpect(jsonPath("$.auction.rounds").isArray)
@@ -297,12 +307,12 @@ class ApiTests {
     @Test
     fun `Should get result`() {
         mvc.perform(get("/auctions/${finished()}/result"))
+                .andDo { result -> logger.info("Request: {} | Response: {}", result.request.contentAsString, result.response.contentAsString) }
                 .andExpect(status().isOk)
                 //.andExpect(jsonPath("$.allocation.B.value").value(12))
                 //.andExpect(jsonPath("$.allocation.B.goods.item").value(1))
                 //.andExpect(jsonPath("$.payments.B").value(10))
                 .andExpect(jsonPath("$.payments.totalPayments").value(10))
-                .andDo { result -> logger.info(result.response.contentAsString) }
     }
 
     private fun body(): JSONObject = JSONObject()
@@ -336,6 +346,8 @@ class ApiTests {
                 post("/auctions/$uuid/bids")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(bids(bidder1Uuid, bidder2Uuid).toString()))
+                .andExpect(status().isOk)
+        mvc.perform(post("/auctions/$uuid/close-round"))
                 .andExpect(status().isOk)
         return uuid
     }

@@ -16,26 +16,26 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.assertj.core.api.Assertions.*
-import org.marketdesignresearch.mechlib.auction.cca.CCARound
 
 @RunWith(SpringRunner::class)
 @SpringBootTest
 @AutoConfigureMockMvc
 //@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
-class CCAApiTests {
+class PVMApiTests {
 
-    private val logger = LoggerFactory.getLogger(CCAApiTests::class.java)
+    private val logger = LoggerFactory.getLogger(PVMApiTests::class.java)
 
     @Autowired
     lateinit var mvc: MockMvc
 
     @Test
-    fun `Should create new CCA auction`() {
+    fun `Should create new PVM auction`() {
 
         var uuid: String? = null
         var content: String? = null
         var bidder1Id: String? = null
         var bidder2Id: String? = null
+        var bidder3Id: String? = null
 
         val body = JSONObject()
                 .put("domain", JSONObject()
@@ -49,8 +49,10 @@ class CCAApiTests {
                                         .put("name", "3")))
                         .put("goods", JSONArray()
                                 .put(JSONObject().put("id", "A"))
-                                .put(JSONObject().put("id", "B"))))
-                .put("auctionType", "CCA_VCG")
+                                .put(JSONObject().put("id", "B"))
+                                .put(JSONObject().put("id", "C"))
+                                .put(JSONObject().put("id", "D"))))
+                .put("auctionType", "PVM_VCG")
 
         mvc.perform(
                 post("/auctions/")
@@ -64,6 +66,7 @@ class CCAApiTests {
                     val bidderArray = json.getJSONObject("auction").getJSONObject("domain").getJSONArray("bidders")
                     bidder1Id = bidderArray.getJSONObject(0).getString("id")
                     bidder2Id = bidderArray.getJSONObject(1).getString("id")
+                    bidder3Id = bidderArray.getJSONObject(2).getString("id")
                 }
 
         mvc.perform(get("/auctions/$uuid"))
@@ -74,7 +77,7 @@ class CCAApiTests {
                 }
                 .andExpect(jsonPath("$.uuid").exists())
                 .andExpect(jsonPath("$.uuid").isString)
-                .andExpect(jsonPath("$.auctionType").value("CCA_VCG"))
+                .andExpect(jsonPath("$.auctionType").value("PVM_VCG"))
                 .andExpect(jsonPath("$.auction.domain").exists())
                 .andExpect(jsonPath("$.auction.domain.bidders").exists())
                 .andExpect(jsonPath("$.auction.domain.bidders[0].id").isString)
@@ -103,6 +106,21 @@ class CCAApiTests {
                 .andExpect(jsonPath("$.auction.domain.goods[1].dummyGood").value(false))
                 .andExpect(jsonPath("$.auction.rounds").isArray)
                 .andExpect(jsonPath("$.auction.rounds").isEmpty)
+                .andExpect(jsonPath("$.auction.restrictedBids").exists())
+                .andExpect(jsonPath("$.auction.restrictedBids.$bidder1Id").doesNotExist())
+                .andExpect(jsonPath("$.auction.restrictedBids.$bidder2Id").doesNotExist())
+                .andExpect(jsonPath("$.auction.restrictedBids.$bidder3Id").doesNotExist())
+                .andExpect(jsonPath("$.auction.allowedNumberOfBids").value(5))
+
+        mvc.perform(post("/auctions/$uuid/advance"))
+                .andDo { logger.info("Request: {} | Response: {}", it.request.contentAsString, it.response.contentAsString) }
+                .andExpect(status().isOk)
+                .andExpect(jsonPath("$.auction.rounds[0]").exists())
+                .andExpect(jsonPath("$.auction.restrictedBids").exists())
+                .andExpect(jsonPath("$.auction.restrictedBids.$bidder1Id").isArray)
+                .andExpect(jsonPath("$.auction.restrictedBids.$bidder2Id").isArray)
+                .andExpect(jsonPath("$.auction.restrictedBids.$bidder3Id").isArray)
+                .andExpect(jsonPath("$.auction.allowedNumberOfBids").value(1))
 
         mvc.perform(
                 post("/auctions/$uuid/bids")
@@ -111,23 +129,19 @@ class CCAApiTests {
                                 .put(bidder1Id, JSONArray().put(JSONObject().put("amount", 2).put("bundle", JSONObject().put("B", 1))))
                                 .put(bidder2Id, JSONArray().put(JSONObject().put("amount", 3).put("bundle", JSONObject().put("A", 1)))).toString()))
                 .andDo { logger.info("Request: {} | Response: {}", it.request.contentAsString, it.response.contentAsString) }
-                .andExpect(status().isOk)
-                .andExpect(jsonPath("$.uuid").value(uuid!!))
-                .andExpect(jsonPath("$.auction.rounds").isEmpty)
+                .andExpect(status().isBadRequest)
 
-        mvc.perform(post("/auctions/$uuid/close-round"))
+        mvc.perform(post("/auctions/$uuid/advance"))
                 .andDo { logger.info("Request: {} | Response: {}", it.request.contentAsString, it.response.contentAsString) }
                 .andExpect(status().isOk)
-                .andExpect(jsonPath("$.uuid").value(uuid!!))
-                .andExpect(jsonPath("$.auction.rounds").isNotEmpty)
-                .andExpect(jsonPath("$.auction.rounds[0].mechanismResult").exists())
-                .andExpect(jsonPath("$.auction.rounds[0].mechanismResult.allocation.$bidder2Id.value").value(3))
-                .andExpect(jsonPath("$.auction.rounds[0].mechanismResult.allocation.$bidder2Id.goods.A").value(1))
-                .andExpect(jsonPath("$.auction.rounds[0].mechanismResult.allocation.$bidder1Id.value").value(2))
-                .andExpect(jsonPath("$.auction.rounds[0].mechanismResult.allocation.$bidder1Id.goods.B").value(1))
-                .andExpect(jsonPath("$.auction.rounds[0].mechanismResult.payments.totalPayments").value(0))
-                .andExpect(jsonPath("$.auction.rounds[0].type").value(CCARound.Type.CLOCK.name))
+                .andExpect(jsonPath("$.auction.rounds[0]").exists())
+                .andExpect(jsonPath("$.auction.restrictedBids").exists())
+                .andExpect(jsonPath("$.auction.restrictedBids.$bidder1Id").isArray)
+                .andExpect(jsonPath("$.auction.restrictedBids.$bidder2Id").isArray)
+                .andExpect(jsonPath("$.auction.restrictedBids.$bidder3Id").isArray)
+                .andExpect(jsonPath("$.auction.allowedNumberOfBids").value(1))
 
+        // TODO: Place valid bids, close auction
 
     }
 

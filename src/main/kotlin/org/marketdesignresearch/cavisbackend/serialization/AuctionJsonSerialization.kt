@@ -26,8 +26,10 @@ class AuctionJsonSerialization {
                 jsonGenerator.writeObject(auction.getRound(i))
             }
             jsonGenerator.writeEndArray()
-            jsonGenerator.writeObjectField("nextGoods", auction.nextGoods().map{it.id})
-            jsonGenerator.writeObjectField("allowedNumberOfBids", auction.allowedNumberOfBids())
+            jsonGenerator.writeObjectFieldStart("restrictedBids")
+            auction.restrictedBids().forEach{ jsonGenerator.writeObjectField(it.key.id.toString(), it.value) }
+            jsonGenerator.writeEndObject()
+            jsonGenerator.writeNumberField("allowedNumberOfBids", auction.allowedNumberOfBids())
             jsonGenerator.writeEndObject()
         }
     }
