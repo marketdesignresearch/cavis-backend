@@ -61,6 +61,8 @@ class ApiTests {
                 .andExpect(jsonPath("$.auction.domain.goods[0].dummyGood").value(false))
                 .andExpect(jsonPath("$.auction.rounds").isArray)
                 .andExpect(jsonPath("$.auction.rounds").isEmpty)
+                .andExpect(jsonPath("$.auction.currentPrices").exists())
+                .andExpect(jsonPath("$.auction.currentPrices").isEmpty)
                 .andDo { result -> logger.info(result.response.contentAsString) }
 
     }
