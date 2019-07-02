@@ -103,6 +103,9 @@ class CCAApiTests {
                 .andExpect(jsonPath("$.auction.domain.goods[1].dummyGood").value(false))
                 .andExpect(jsonPath("$.auction.rounds").isArray)
                 .andExpect(jsonPath("$.auction.rounds").isEmpty)
+                .andExpect(jsonPath("$.auction.currentPrices").exists())
+                .andExpect(jsonPath("$.auction.currentPrices.A").isNumber)
+                .andExpect(jsonPath("$.auction.currentPrices.B").isNumber)
 
         mvc.perform(
                 post("/auctions/$uuid/bids")
