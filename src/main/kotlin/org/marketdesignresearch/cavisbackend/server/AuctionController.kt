@@ -1,9 +1,9 @@
 package org.marketdesignresearch.cavisbackend.server
 
+import org.marketdesignresearch.cavisbackend.domains.AuctionFactory
 import org.marketdesignresearch.cavisbackend.domains.DomainWrapper
 import org.marketdesignresearch.cavisbackend.management.AuctionWrapper
 import org.marketdesignresearch.cavisbackend.management.SessionManagement
-import org.marketdesignresearch.mechlib.auction.AuctionFactory
 import org.marketdesignresearch.mechlib.auction.IllegalBidException
 import org.marketdesignresearch.mechlib.domain.Bundle
 import org.marketdesignresearch.mechlib.domain.BundleBid
@@ -44,6 +44,13 @@ class AuctionController {
     @GetMapping("/auctions/{uuid}")
     fun getAuction(@PathVariable uuid: UUID): ResponseEntity<AuctionWrapper> {
         return ResponseEntity.of(Optional.ofNullable(SessionManagement.get(uuid)))
+    }
+
+    @DeleteMapping("/auctions/{uuid}")
+    fun deleteAuction(@PathVariable uuid: UUID): ResponseEntity<Any> {
+        val success = SessionManagement.delete(uuid)
+        if (!success) return ResponseEntity.notFound().build()
+        return ResponseEntity.ok().build()
     }
 
     @PostMapping("/auctions/{uuid}/demandquery")

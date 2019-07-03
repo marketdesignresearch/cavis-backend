@@ -14,6 +14,7 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import java.util.*
 
 @RunWith(SpringRunner::class)
 @SpringBootTest
@@ -40,8 +41,8 @@ class ApiTests {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body().toString()))
                 .andExpect(status().isOk)
-                .andExpect(jsonPath("$.uuid").exists())
-                .andExpect(jsonPath("$.uuid").isString)
+                .andExpect(jsonPath("$.id").exists())
+                .andExpect(jsonPath("$.id").isString)
                 .andExpect(jsonPath("$.auctionType").value("SINGLE_ITEM_SECOND_PRICE"))
                 .andExpect(jsonPath("$.auction.domain").exists())
                 .andExpect(jsonPath("$.auction.domain.bidders").exists())
@@ -63,6 +64,7 @@ class ApiTests {
                 .andExpect(jsonPath("$.auction.rounds").isEmpty)
                 .andExpect(jsonPath("$.auction.currentPrices").exists())
                 .andExpect(jsonPath("$.auction.currentPrices").isEmpty)
+                .andExpect(jsonPath("$.auction.finished").value(false))
                 .andDo { result -> logger.info(result.response.contentAsString) }
 
     }
@@ -96,10 +98,10 @@ class ApiTests {
     @Test
     fun `Should get auctions`() {
         val created1 = created()
-        val uuid1 = created1.getString("uuid")
+        val id1 = created1.getString("id")
 
         val created2 = created()
-        val uuid2 = created2.getString("uuid")
+        val id2 = created2.getString("id")
 
         mvc.perform(get("/auctions"))
                 .andExpect(status().isOk)
@@ -108,9 +110,31 @@ class ApiTests {
     }
 
     @Test
+    fun `Should delete auctions`() {
+        mvc.perform(delete("/auctions/${UUID.randomUUID()}"))
+                .andExpect(status().isNotFound)
+                .andDo { result -> logger.info(result.response.contentAsString) }
+
+        val created = created()
+        val id = created.getString("id")
+
+        mvc.perform(get("/auctions/$id"))
+                .andExpect(status().isOk)
+                .andDo { result -> logger.info(result.response.contentAsString) }
+
+        mvc.perform(delete("/auctions/$id"))
+                .andExpect(status().isOk)
+                .andDo { result -> logger.info(result.response.contentAsString) }
+
+        mvc.perform(get("/auctions/$id"))
+                .andExpect(status().isNotFound)
+                .andDo { result -> logger.info(result.response.contentAsString) }
+    }
+
+    @Test
     fun `Should run demand query`() {
         val created = created()
-        val uuid = created.getString("uuid")
+        val id = created.getString("id")
         val bidder1Uuid = created.getJSONObject("auction").getJSONObject("domain").getJSONArray("bidders").getJSONObject(0).getString("id")
         val bidder2Uuid = created.getJSONObject("auction").getJSONObject("domain").getJSONArray("bidders").getJSONObject(1).getString("id")
 
@@ -121,20 +145,20 @@ class ApiTests {
                 .put("numberOfBundles", 3)
 
         // No content
-        mvc.perform(post("/auctions/$uuid/demandquery"))
+        mvc.perform(post("/auctions/$id/demandquery"))
                 .andExpect(status().isBadRequest)
                 .andDo { result -> logger.info("Request: {} | Response: {}", result.request.contentAsString, result.response.contentAsString) }
 
         // Empty content
         mvc.perform(
-                post("/auctions/$uuid/demandquery")
+                post("/auctions/$id/demandquery")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
                 .andExpect(status().isOk) // Zero-prices query for all bidders
                 .andDo { result -> logger.info("Request: {} | Response: {}", result.request.contentAsString, result.response.contentAsString) }
 
         mvc.perform(
-                post("/auctions/$uuid/demandquery")
+                post("/auctions/$id/demandquery")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(demandQueryContent.toString()))
                 .andExpect(status().isOk)
@@ -147,7 +171,7 @@ class ApiTests {
                 .andExpect(jsonPath("$.$bidder2Uuid").doesNotExist())
                 .andDo { result -> logger.info("Request: {} | Response: {}", result.request.contentAsString, result.response.contentAsString) }
         mvc.perform(
-                post("/auctions/$uuid/demandquery")
+                post("/auctions/$id/demandquery")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(demandQueryContent.put("bidders", null).toString()))
                 .andExpect(status().isOk)
@@ -165,7 +189,7 @@ class ApiTests {
                 .andDo { result -> logger.info("Request: {} | Response: {}", result.request.contentAsString, result.response.contentAsString) }
 
         mvc.perform(
-                post("/auctions/$uuid/demandquery")
+                post("/auctions/$id/demandquery")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(JSONObject().put("prices", JSONObject().put("item", 500000)).toString()))
                 .andExpect(status().isOk)
@@ -183,7 +207,7 @@ class ApiTests {
     @Test
     fun `Should run value query`() {
         val created = created()
-        val uuid = created.getString("uuid")
+        val id = created.getString("id")
         val bidder1Uuid = created.getJSONObject("auction").getJSONObject("domain").getJSONArray("bidders").getJSONObject(0).getString("id")
         val bidder2Uuid = created.getJSONObject("auction").getJSONObject("domain").getJSONArray("bidders").getJSONObject(1).getString("id")
 
@@ -193,20 +217,20 @@ class ApiTests {
                 .put("bidders", JSONArray().put(bidder1Uuid))
 
         // No content
-        mvc.perform(post("/auctions/$uuid/valuequery"))
+        mvc.perform(post("/auctions/$id/valuequery"))
                 .andDo { result -> logger.info("Request: {} | Response: {}", result.request.contentAsString, result.response.contentAsString) }
                 .andExpect(status().isBadRequest)
 
         // Empty content
         mvc.perform(
-                post("/auctions/$uuid/valuequery")
+                post("/auctions/$id/valuequery")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
                 .andDo { result -> logger.info("Request: {} | Response: {}", result.request.contentAsString, result.response.contentAsString) }
                 .andExpect(status().isBadRequest)
 
         mvc.perform(
-                post("/auctions/$uuid/valuequery")
+                post("/auctions/$id/valuequery")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(valueQueryContent.toString()))
                 .andDo { result -> logger.info("Request: {} | Response: {}", result.request.contentAsString, result.response.contentAsString) }
@@ -215,7 +239,7 @@ class ApiTests {
                 .andExpect(jsonPath("$.$bidder2Uuid").doesNotExist())
 
         mvc.perform(
-                post("/auctions/$uuid/valuequery")
+                post("/auctions/$id/valuequery")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(valueQueryContent.put("bidders", null).toString()))
                 .andExpect(status().isOk)
@@ -224,7 +248,7 @@ class ApiTests {
                 .andDo { result -> logger.info("Request: {} | Response: {}", result.request.contentAsString, result.response.contentAsString) }
 
         mvc.perform(
-                post("/auctions/$uuid/valuequery")
+                post("/auctions/$id/valuequery")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"bundle\": {}}"))
                 .andDo { result -> logger.info("Request: {} | Response: {}", result.request.contentAsString, result.response.contentAsString) }
@@ -236,23 +260,23 @@ class ApiTests {
     @Test
     fun `Should place bids`() {
         val created = created()
-        val uuid = created.getString("uuid")
+        val id = created.getString("id")
         val bidder1Uuid = created.getJSONObject("auction").getJSONObject("domain").getJSONArray("bidders").getJSONObject(0).getString("id")
         val bidder2Uuid = created.getJSONObject("auction").getJSONObject("domain").getJSONArray("bidders").getJSONObject(1).getString("id")
 
         mvc.perform(
-                post("/auctions/$uuid/bids")
+                post("/auctions/$id/bids")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(bids(bidder1Uuid, bidder2Uuid).toString()))
                 .andDo { logger.info("Request: {} | Response: {}", it.request.contentAsString, it.response.contentAsString) }
                 .andExpect(status().isOk)
-                .andExpect(jsonPath("$.uuid").value(uuid))
+                .andExpect(jsonPath("$.id").value(id))
                 .andExpect(jsonPath("$.auction.rounds").isEmpty)
 
-        mvc.perform(post("/auctions/$uuid/close-round"))
+        mvc.perform(post("/auctions/$id/close-round"))
                 .andDo { logger.info("Request: {} | Response: {}", it.request.contentAsString, it.response.contentAsString) }
                 .andExpect(status().isOk)
-                .andExpect(jsonPath("$.uuid").value(uuid))
+                .andExpect(jsonPath("$.id").value(id))
                 .andExpect(jsonPath("$.auction.rounds").isNotEmpty)
                 .andExpect(jsonPath("$.auction.rounds[0].mechanismResult").exists())
                 .andExpect(jsonPath("$.auction.rounds[0].mechanismResult.allocation.$bidder2Uuid.value").value(12))
@@ -264,21 +288,21 @@ class ApiTests {
     @Test
     fun `Should reset auction`() {
         val created = created()
-        val uuid = created.getString("uuid")
+        val id = created.getString("id")
         val bidder1Uuid = created.getJSONObject("auction").getJSONObject("domain").getJSONArray("bidders").getJSONObject(0).getString("id")
         val bidder2Uuid = created.getJSONObject("auction").getJSONObject("domain").getJSONArray("bidders").getJSONObject(1).getString("id")
 
         for (i in 0..4) {
             mvc.perform(
-                    post("/auctions/$uuid/bids")
+                    post("/auctions/$id/bids")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(bids(bidder1Uuid, bidder2Uuid).toString()))
                     .andExpect(status().isOk)
-            mvc.perform(post("/auctions/$uuid/close-round"))
+            mvc.perform(post("/auctions/$id/close-round"))
                     .andExpect(status().isOk)
         }
 
-        mvc.perform(get("/auctions/$uuid/"))
+        mvc.perform(get("/auctions/$id/"))
                 .andDo { logger.info("Request: {} | Response: {}", it.request.contentAsString, it.response.contentAsString) }
                 .andExpect(status().isOk)
                 .andExpect(jsonPath("$.auction.rounds").isNotEmpty)
@@ -290,7 +314,7 @@ class ApiTests {
                 .andExpect(jsonPath("$.auction.rounds[4].bids").exists())
 
         mvc.perform(
-                put("/auctions/$uuid/reset")
+                put("/auctions/$id/reset")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"round\": 3}"))
                 .andDo { logger.info("Request: {} | Response: {}", it.request.contentAsString, it.response.contentAsString) }
@@ -340,18 +364,18 @@ class ApiTests {
 
     private fun finished(): String {
         val created = created()
-        val uuid = created.getString("uuid")
+        val id = created.getString("id")
         val bidder1Uuid = created.getJSONObject("auction").getJSONObject("domain").getJSONArray("bidders").getJSONObject(0).getString("id")
         val bidder2Uuid = created.getJSONObject("auction").getJSONObject("domain").getJSONArray("bidders").getJSONObject(1).getString("id")
 
         mvc.perform(
-                post("/auctions/$uuid/bids")
+                post("/auctions/$id/bids")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(bids(bidder1Uuid, bidder2Uuid).toString()))
                 .andExpect(status().isOk)
-        mvc.perform(post("/auctions/$uuid/close-round"))
+        mvc.perform(post("/auctions/$id/close-round"))
                 .andExpect(status().isOk)
-        return uuid
+        return id
     }
 }
 

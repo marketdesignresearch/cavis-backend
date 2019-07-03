@@ -32,7 +32,7 @@ class CCAApiTests {
     @Test
     fun `Should create new CCA auction`() {
 
-        var uuid: String? = null
+        var id: String? = null
         var content: String? = null
         var bidder1Id: String? = null
         var bidder2Id: String? = null
@@ -60,20 +60,20 @@ class CCAApiTests {
                 .andDo {
                     content = it.response.contentAsString
                     val json = JSONObject(content)
-                    uuid = json.getString("uuid")
+                    id = json.getString("id")
                     val bidderArray = json.getJSONObject("auction").getJSONObject("domain").getJSONArray("bidders")
                     bidder1Id = bidderArray.getJSONObject(0).getString("id")
                     bidder2Id = bidderArray.getJSONObject(1).getString("id")
                 }
 
-        mvc.perform(get("/auctions/$uuid"))
+        mvc.perform(get("/auctions/$id"))
                 .andExpect(status().isOk)
                 .andDo {
                     logger.info("Request: {} | Response: {}", it.request.contentAsString, it.response.contentAsString)
                     assertThat(content).isEqualTo(it.response.contentAsString)
                 }
-                .andExpect(jsonPath("$.uuid").exists())
-                .andExpect(jsonPath("$.uuid").isString)
+                .andExpect(jsonPath("$.id").exists())
+                .andExpect(jsonPath("$.id").isString)
                 .andExpect(jsonPath("$.auctionType").value("CCA_VCG"))
                 .andExpect(jsonPath("$.auction.domain").exists())
                 .andExpect(jsonPath("$.auction.domain.bidders").exists())
@@ -106,22 +106,25 @@ class CCAApiTests {
                 .andExpect(jsonPath("$.auction.currentPrices").exists())
                 .andExpect(jsonPath("$.auction.currentPrices.A").isNumber)
                 .andExpect(jsonPath("$.auction.currentPrices.B").isNumber)
+                .andExpect(jsonPath("$.auction.currentRoundType").value("CLOCK"))
+                .andExpect(jsonPath("$.auction.supplementaryRounds").isArray)
 
         mvc.perform(
-                post("/auctions/$uuid/bids")
+                post("/auctions/$id/bids")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(JSONObject()
                                 .put(bidder1Id, JSONArray().put(JSONObject().put("amount", 2).put("bundle", JSONObject().put("B", 1))))
                                 .put(bidder2Id, JSONArray().put(JSONObject().put("amount", 3).put("bundle", JSONObject().put("A", 1)))).toString()))
                 .andDo { logger.info("Request: {} | Response: {}", it.request.contentAsString, it.response.contentAsString) }
                 .andExpect(status().isOk)
-                .andExpect(jsonPath("$.uuid").value(uuid!!))
+                .andExpect(jsonPath("$.id").value(id!!))
                 .andExpect(jsonPath("$.auction.rounds").isEmpty)
 
-        mvc.perform(post("/auctions/$uuid/close-round"))
+        mvc.perform(post("/auctions/$id/close-round"))
                 .andDo { logger.info("Request: {} | Response: {}", it.request.contentAsString, it.response.contentAsString) }
                 .andExpect(status().isOk)
-                .andExpect(jsonPath("$.uuid").value(uuid!!))
+                .andExpect(jsonPath("$.id").value(id!!))
+                .andExpect(jsonPath("$.auction.currentRoundType").value("SUPPLEMENTARY"))
                 .andExpect(jsonPath("$.auction.rounds").isNotEmpty)
                 .andExpect(jsonPath("$.auction.rounds[0].mechanismResult").exists())
                 .andExpect(jsonPath("$.auction.rounds[0].mechanismResult.allocation.$bidder2Id.value").value(3))
@@ -163,10 +166,10 @@ class CCAApiTests {
 //    @Test
 //    fun `Should get auctions`() {
 //        val created1 = created()
-//        val uuid1 = created1.getString("uuid")
+//        val id1 = created1.getString("id")
 //
 //        val created2 = created()
-//        val uuid2 = created2.getString("uuid")
+//        val id2 = created2.getString("id")
 //
 //        mvc.perform(get("/auctions"))
 //                .andExpect(status().isOk)
@@ -177,16 +180,16 @@ class CCAApiTests {
 //    @Test
 //    fun `Should place bids`() {
 //        val created = created()
-//        val uuid = created.getString("uuid")
+//        val id = created.getString("id")
 //        val bidder1Uuid = created.getJSONObject("auction").getJSONObject("domain").getJSONArray("bidders").getJSONObject(0).getString("id");
 //        val bidder2Uuid = created.getJSONObject("auction").getJSONObject("domain").getJSONArray("bidders").getJSONObject(1).getString("id");
 //
 //        mvc.perform(
-//                post("/auctions/$uuid/bids")
+//                post("/auctions/$id/bids")
 //                        .contentType(MediaType.APPLICATION_JSON)
 //                        .content(bids(bidder1Uuid, bidder2Uuid).toString()))
 //                .andExpect(status().isOk)
-//                .andExpect(jsonPath("$.uuid").value(uuid))
+//                .andExpect(jsonPath("$.id").value(id))
 //                .andExpect(jsonPath("$.auction.rounds").isNotEmpty)
 //                .andExpect(jsonPath("$.auction.rounds[0].mechanismResult").exists())
 //                .andExpect(jsonPath("$.auction.rounds[0].mechanismResult.allocation.$bidder2Uuid.value").value(12))
@@ -199,19 +202,19 @@ class CCAApiTests {
 //    @Test
 //    fun `Should reset auction`() {
 //        val created = created()
-//        val uuid = created.getString("uuid")
+//        val id = created.getString("id")
 //        val bidder1Uuid = created.getJSONObject("auction").getJSONObject("domain").getJSONArray("bidders").getJSONObject(0).getString("id");
 //        val bidder2Uuid = created.getJSONObject("auction").getJSONObject("domain").getJSONArray("bidders").getJSONObject(1).getString("id");
 //
 //        for (i in 0..4) {
 //            mvc.perform(
-//                    post("/auctions/$uuid/bids")
+//                    post("/auctions/$id/bids")
 //                            .contentType(MediaType.APPLICATION_JSON)
 //                            .content(bids(bidder1Uuid, bidder2Uuid).toString()))
 //                    .andExpect(status().isOk)
 //        }
 //
-//        mvc.perform(get("/auctions/$uuid/"))
+//        mvc.perform(get("/auctions/$id/"))
 //                .andExpect(status().isOk)
 //                .andExpect(jsonPath("$.auction.rounds").isNotEmpty)
 //                .andExpect(jsonPath("$.auction.rounds").isArray)
@@ -222,7 +225,7 @@ class CCAApiTests {
 //                .andExpect(jsonPath("$.auction.rounds[4].bids").exists())
 //
 //        mvc.perform(
-//                put("/auctions/$uuid/reset")
+//                put("/auctions/$id/reset")
 //                        .contentType(MediaType.APPLICATION_JSON)
 //                        .content("{\"round\": 3}"))
 //                .andExpect(status().isOk)
@@ -271,16 +274,16 @@ class CCAApiTests {
 //
 //    private fun finished(): String {
 //        val created = created()
-//        val uuid = created.getString("uuid")
+//        val id = created.getString("id")
 //        val bidder1Uuid = created.getJSONObject("auction").getJSONObject("domain").getJSONArray("bidders").getJSONObject(0).getString("id");
 //        val bidder2Uuid = created.getJSONObject("auction").getJSONObject("domain").getJSONArray("bidders").getJSONObject(1).getString("id");
 //
 //        mvc.perform(
-//                post("/auctions/$uuid/bids")
+//                post("/auctions/$id/bids")
 //                        .contentType(MediaType.APPLICATION_JSON)
 //                        .content(bids(bidder1Uuid, bidder2Uuid).toString()))
 //                .andExpect(status().isOk)
-//        return uuid
+//        return id
 //    }
 }
 
