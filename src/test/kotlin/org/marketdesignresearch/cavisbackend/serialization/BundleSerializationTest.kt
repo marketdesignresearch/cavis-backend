@@ -26,14 +26,7 @@ class BundleSerializationTest {
         val bundle = Bundle.singleGoods(setOf(itemA, itemB))
         val serialized = json?.write(bundle)
 
-        assertThat(serialized?.json).isEqualTo("[{\"good\":\"B\",\"amount\":1},{\"good\":\"A\",\"amount\":1}]")
-    }
-
-    @Test
-    fun deserialize() {
-        val serialized = "{\"bundleEntries\":[{\"good\":{\"id\":\"B\",\"availability\":1,\"dummyGood\":false},\"amount\":1},{\"good\":{\"id\":\"A\",\"availability\":1,\"dummyGood\":false},\"amount\":1}],\"singleGood\":null}"
-        val deserialized = json?.parseObject(serialized)
-        assertThat(deserialized?.bundleEntries?.size).isEqualTo(2)
+        assertThat(serialized?.json).isEqualTo("[{\"good\":\"A\",\"amount\":1},{\"good\":\"B\",\"amount\":1}]")
     }
 
 }

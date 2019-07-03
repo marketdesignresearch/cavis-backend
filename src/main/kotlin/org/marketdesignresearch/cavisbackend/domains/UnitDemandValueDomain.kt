@@ -34,7 +34,7 @@ data class UnitDemandValueDomain(val bidders: List<PerItemBidder>, val goods: Li
             val amount = distribution.sample().toLong()
             val value = XORValue()
             for (combination in goods.powerset()) {
-                val bundleEntries = combination.map { g -> BundleEntry(g, 1) }.toHashSet()
+                val bundleEntries = combination.map { g -> BundleEntry(g, 1) }.toSet()
                 val bundle = Bundle(bundleEntries)
                 val v = if (combination.isNotEmpty()) BigDecimal.valueOf(amount) else BigDecimal.ZERO
                 value.addBundleValue(BundleValue(v, bundle))

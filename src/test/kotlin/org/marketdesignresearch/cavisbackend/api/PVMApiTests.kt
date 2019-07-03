@@ -31,7 +31,7 @@ class PVMApiTests {
     @Test
     fun `Should create new PVM auction`() {
 
-        var uuid: String? = null
+        var id: String? = null
         var content: String? = null
         var bidder1Id: String? = null
         var bidder2Id: String? = null
@@ -62,21 +62,21 @@ class PVMApiTests {
                 .andDo {
                     content = it.response.contentAsString
                     val json = JSONObject(content)
-                    uuid = json.getString("uuid")
+                    id = json.getString("id")
                     val bidderArray = json.getJSONObject("auction").getJSONObject("domain").getJSONArray("bidders")
                     bidder1Id = bidderArray.getJSONObject(0).getString("id")
                     bidder2Id = bidderArray.getJSONObject(1).getString("id")
                     bidder3Id = bidderArray.getJSONObject(2).getString("id")
                 }
 
-        mvc.perform(get("/auctions/$uuid"))
+        mvc.perform(get("/auctions/$id"))
                 .andExpect(status().isOk)
                 .andDo {
                     logger.info("Request: {} | Response: {}", it.request.contentAsString, it.response.contentAsString)
                     assertThat(content).isEqualTo(it.response.contentAsString)
                 }
-                .andExpect(jsonPath("$.uuid").exists())
-                .andExpect(jsonPath("$.uuid").isString)
+                .andExpect(jsonPath("$.id").exists())
+                .andExpect(jsonPath("$.id").isString)
                 .andExpect(jsonPath("$.auctionType").value("PVM_VCG"))
                 .andExpect(jsonPath("$.auction.domain").exists())
                 .andExpect(jsonPath("$.auction.domain.bidders").exists())
@@ -112,7 +112,7 @@ class PVMApiTests {
                 .andExpect(jsonPath("$.auction.restrictedBids.$bidder3Id").doesNotExist())
                 .andExpect(jsonPath("$.auction.allowedNumberOfBids").value(5))
 
-        mvc.perform(post("/auctions/$uuid/advance"))
+        mvc.perform(post("/auctions/$id/advance"))
                 .andDo { logger.info("Request: {} | Response: {}", it.request.contentAsString, it.response.contentAsString) }
                 .andExpect(status().isOk)
                 .andExpect(jsonPath("$.auction.rounds[0]").exists())
@@ -123,7 +123,7 @@ class PVMApiTests {
                 .andExpect(jsonPath("$.auction.allowedNumberOfBids").value(1))
 
         mvc.perform(
-                post("/auctions/$uuid/bids")
+                post("/auctions/$id/bids")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(JSONObject()
                                 .put(bidder1Id, JSONArray().put(JSONObject().put("amount", 2).put("bundle", JSONObject().put("B", 1))))
@@ -131,7 +131,7 @@ class PVMApiTests {
                 .andDo { logger.info("Request: {} | Response: {}", it.request.contentAsString, it.response.contentAsString) }
                 .andExpect(status().isBadRequest)
 
-        mvc.perform(post("/auctions/$uuid/advance"))
+        mvc.perform(post("/auctions/$id/advance"))
                 .andDo { logger.info("Request: {} | Response: {}", it.request.contentAsString, it.response.contentAsString) }
                 .andExpect(status().isOk)
                 .andExpect(jsonPath("$.auction.rounds[0]").exists())
@@ -174,10 +174,10 @@ class PVMApiTests {
 //    @Test
 //    fun `Should get auctions`() {
 //        val created1 = created()
-//        val uuid1 = created1.getString("uuid")
+//        val id1 = created1.getString("id")
 //
 //        val created2 = created()
-//        val uuid2 = created2.getString("uuid")
+//        val id2 = created2.getString("id")
 //
 //        mvc.perform(get("/auctions"))
 //                .andExpect(status().isOk)
@@ -188,16 +188,16 @@ class PVMApiTests {
 //    @Test
 //    fun `Should place bids`() {
 //        val created = created()
-//        val uuid = created.getString("uuid")
+//        val id = created.getString("id")
 //        val bidder1Uuid = created.getJSONObject("auction").getJSONObject("domain").getJSONArray("bidders").getJSONObject(0).getString("id");
 //        val bidder2Uuid = created.getJSONObject("auction").getJSONObject("domain").getJSONArray("bidders").getJSONObject(1).getString("id");
 //
 //        mvc.perform(
-//                post("/auctions/$uuid/bids")
+//                post("/auctions/$id/bids")
 //                        .contentType(MediaType.APPLICATION_JSON)
 //                        .content(bids(bidder1Uuid, bidder2Uuid).toString()))
 //                .andExpect(status().isOk)
-//                .andExpect(jsonPath("$.uuid").value(uuid))
+//                .andExpect(jsonPath("$.id").value(id))
 //                .andExpect(jsonPath("$.auction.rounds").isNotEmpty)
 //                .andExpect(jsonPath("$.auction.rounds[0].mechanismResult").exists())
 //                .andExpect(jsonPath("$.auction.rounds[0].mechanismResult.allocation.$bidder2Uuid.value").value(12))
@@ -210,19 +210,19 @@ class PVMApiTests {
 //    @Test
 //    fun `Should reset auction`() {
 //        val created = created()
-//        val uuid = created.getString("uuid")
+//        val id = created.getString("id")
 //        val bidder1Uuid = created.getJSONObject("auction").getJSONObject("domain").getJSONArray("bidders").getJSONObject(0).getString("id");
 //        val bidder2Uuid = created.getJSONObject("auction").getJSONObject("domain").getJSONArray("bidders").getJSONObject(1).getString("id");
 //
 //        for (i in 0..4) {
 //            mvc.perform(
-//                    post("/auctions/$uuid/bids")
+//                    post("/auctions/$id/bids")
 //                            .contentType(MediaType.APPLICATION_JSON)
 //                            .content(bids(bidder1Uuid, bidder2Uuid).toString()))
 //                    .andExpect(status().isOk)
 //        }
 //
-//        mvc.perform(get("/auctions/$uuid/"))
+//        mvc.perform(get("/auctions/$id/"))
 //                .andExpect(status().isOk)
 //                .andExpect(jsonPath("$.auction.rounds").isNotEmpty)
 //                .andExpect(jsonPath("$.auction.rounds").isArray)
@@ -233,7 +233,7 @@ class PVMApiTests {
 //                .andExpect(jsonPath("$.auction.rounds[4].bids").exists())
 //
 //        mvc.perform(
-//                put("/auctions/$uuid/reset")
+//                put("/auctions/$id/reset")
 //                        .contentType(MediaType.APPLICATION_JSON)
 //                        .content("{\"round\": 3}"))
 //                .andExpect(status().isOk)
@@ -282,16 +282,16 @@ class PVMApiTests {
 //
 //    private fun finished(): String {
 //        val created = created()
-//        val uuid = created.getString("uuid")
+//        val id = created.getString("id")
 //        val bidder1Uuid = created.getJSONObject("auction").getJSONObject("domain").getJSONArray("bidders").getJSONObject(0).getString("id");
 //        val bidder2Uuid = created.getJSONObject("auction").getJSONObject("domain").getJSONArray("bidders").getJSONObject(1).getString("id");
 //
 //        mvc.perform(
-//                post("/auctions/$uuid/bids")
+//                post("/auctions/$id/bids")
 //                        .contentType(MediaType.APPLICATION_JSON)
 //                        .content(bids(bidder1Uuid, bidder2Uuid).toString()))
 //                .andExpect(status().isOk)
-//        return uuid
+//        return id
 //    }
 }
 

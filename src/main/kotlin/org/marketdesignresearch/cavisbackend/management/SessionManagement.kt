@@ -1,12 +1,12 @@
 package org.marketdesignresearch.cavisbackend.management
 
+import org.marketdesignresearch.cavisbackend.domains.AuctionFactory
 import org.marketdesignresearch.mechlib.auction.Auction
-import org.marketdesignresearch.mechlib.auction.AuctionFactory
 import org.marketdesignresearch.mechlib.domain.Domain
 import java.util.*
 import kotlin.collections.HashMap
 
-data class AuctionWrapper(val uuid: UUID, val auction: Auction, val auctionType: AuctionFactory)
+data class AuctionWrapper(val id: UUID, val auction: Auction, val auctionType: AuctionFactory)
 
 object SessionManagement {
 
@@ -25,6 +25,10 @@ object SessionManagement {
 
     fun get(): Set<AuctionWrapper> {
         return sessions.values.toSet()
+    }
+
+    fun delete(uuid: UUID): Boolean {
+        return sessions.remove(uuid) != null
     }
 
 }
