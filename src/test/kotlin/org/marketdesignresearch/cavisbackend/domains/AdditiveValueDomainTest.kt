@@ -26,7 +26,7 @@ class AdditiveValueDomainTest {
 
     @Test
     fun `Should create valid Additive Value Domain`() {
-        val domain = AdditiveValueDomain(
+        val domain = AdditiveValueDomainWrapper(
                 listOf(PerItemBidder("1", 10, 10),
                         PerItemBidder("2", 13, 13),
                         PerItemBidder("3", 16, 16)),
