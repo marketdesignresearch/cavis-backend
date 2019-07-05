@@ -1,5 +1,4 @@
-docker/ssh/*_rsa*
-*.bin
+docker/cplex
 HELP.md
 /target/
 !.mvn/wrapper/maven-wrapper.jar
