@@ -1,10 +1,12 @@
 package org.marketdesignresearch.cavisbackend
 
-import org.marketdesignresearch.mechlib.domain.*
+import org.marketdesignresearch.mechlib.domain.BundleBid
+import org.marketdesignresearch.mechlib.domain.Good
+import org.marketdesignresearch.mechlib.domain.SimpleGood
 import org.marketdesignresearch.mechlib.domain.bid.Bid
 import org.marketdesignresearch.mechlib.domain.bid.Bids
 import org.marketdesignresearch.mechlib.domain.bidder.XORBidder
-import org.marketdesignresearch.mechlib.mechanisms.vcg.ORVCGAuction
+import org.marketdesignresearch.mechlib.mechanisms.vcg.ORVCGMechanism
 import org.slf4j.LoggerFactory
 import org.springframework.boot.ApplicationRunner
 import org.springframework.boot.autoconfigure.SpringBootApplication
@@ -39,7 +41,7 @@ class CavisBackendApplication {
         bids.setBid(XORBidder("B" + 3), Bid(setOf(bid3)))
         bids.setBid(XORBidder("B" + 4), Bid(setOf(bid4)))
 
-        val am = ORVCGAuction(bids)
+        val am = ORVCGMechanism(bids)
         val payment = am.payment
 
         println("Total allocation value: ${am.allocation.totalAllocationValue.toDouble()}")

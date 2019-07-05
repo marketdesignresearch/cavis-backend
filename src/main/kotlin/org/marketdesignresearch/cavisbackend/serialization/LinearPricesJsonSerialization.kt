@@ -4,23 +4,23 @@ import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.JsonSerializer
 import com.fasterxml.jackson.databind.SerializerProvider
-import org.marketdesignresearch.mechlib.mechanisms.MechanismResult
+import org.marketdesignresearch.mechlib.auction.Auction
+import org.marketdesignresearch.mechlib.domain.price.LinearPrices
 import org.springframework.boot.jackson.JsonComponent
 import java.io.IOException
 
 
 @JsonComponent
-class AuctionResultJsonSerialization {
+class LinearPricesJsonSerialization {
 
-    class AuctionResultJsonSerializer : JsonSerializer<MechanismResult>() {
+    class LinearPricesJsonSerializer : JsonSerializer<LinearPrices>() {
 
         @Throws(IOException::class, JsonProcessingException::class)
-        override fun serialize(auctionResult: MechanismResult, jsonGenerator: JsonGenerator,
+        override fun serialize(linearPrices: LinearPrices, jsonGenerator: JsonGenerator,
                                serializerProvider: SerializerProvider) {
 
             jsonGenerator.writeStartObject()
-            jsonGenerator.writeObjectField("allocation", auctionResult.allocation)
-            jsonGenerator.writeObjectField("payments", auctionResult.payment)
+            linearPrices.entrySet().forEach { jsonGenerator.writeObjectField(it.key.id, it.value.amount) }
             jsonGenerator.writeEndObject()
         }
     }

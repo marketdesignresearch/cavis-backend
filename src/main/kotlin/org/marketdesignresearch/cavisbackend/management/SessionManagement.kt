@@ -1,34 +1,34 @@
 package org.marketdesignresearch.cavisbackend.management
 
+import org.marketdesignresearch.cavisbackend.domains.AuctionFactory
+import org.marketdesignresearch.mechlib.auction.Auction
 import org.marketdesignresearch.mechlib.domain.Domain
-import org.marketdesignresearch.mechlib.domain.auction.Auction
-import org.marketdesignresearch.mechlib.mechanisms.MechanismType
 import java.util.*
-import java.util.stream.Collectors
 import kotlin.collections.HashMap
 
-data class AuctionWrapper(val uuid: UUID, val auction: Auction)
+data class AuctionWrapper(val id: UUID, val auction: Auction, val auctionType: AuctionFactory)
 
 object SessionManagement {
 
-    private val sessions: HashMap<UUID, Auction> = HashMap()
+    private val sessions: HashMap<UUID, AuctionWrapper> = HashMap()
 
-    fun create(domain: Domain, type: MechanismType): AuctionWrapper {
+    fun create(domain: Domain, type: AuctionFactory): AuctionWrapper {
         val uuid = UUID.randomUUID()
-        val auction = Auction(domain, type)
-        sessions[uuid] = auction
-        return AuctionWrapper(uuid, auction)
+        val auction = type.getAuction(domain)
+        sessions[uuid] = AuctionWrapper(uuid, auction, type)
+        return AuctionWrapper(uuid, auction, type)
     }
 
     fun get(uuid: UUID): AuctionWrapper? {
-        val auction = sessions[uuid]
-        if (auction != null) return AuctionWrapper(uuid, auction)
-        return null
+        return sessions[uuid]
     }
 
     fun get(): Set<AuctionWrapper> {
-        // TODO: Do this nicer
-        return sessions.entries.stream().map{AuctionWrapper(it.key, it.value)}.collect(Collectors.toSet())
+        return sessions.values.toSet()
+    }
+
+    fun delete(uuid: UUID): Boolean {
+        return sessions.remove(uuid) != null
     }
 
 }

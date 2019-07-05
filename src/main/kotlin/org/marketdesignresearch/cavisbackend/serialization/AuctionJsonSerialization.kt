@@ -4,8 +4,8 @@ import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.JsonSerializer
 import com.fasterxml.jackson.databind.SerializerProvider
-import org.marketdesignresearch.cavisbackend.management.AuctionWrapper
-import org.marketdesignresearch.mechlib.domain.auction.Auction
+import org.marketdesignresearch.mechlib.auction.Auction
+import org.marketdesignresearch.mechlib.auction.cca.CCAuction
 import org.springframework.boot.jackson.JsonComponent
 import java.io.IOException
 
@@ -21,12 +21,22 @@ class AuctionJsonSerialization {
 
             jsonGenerator.writeStartObject()
             jsonGenerator.writeObjectField("domain", auction.domain) // TODO: Add keyword for domain
-            jsonGenerator.writeStringField("mechanismType", auction.mechanismType.name)
+            jsonGenerator.writeStringField("mechanismType", auction.mechanismType.mechanismName)
+            jsonGenerator.writeObjectField("currentPrices", auction.currentPrices)
+            jsonGenerator.writeBooleanField("finished", auction.finished())
+            if (auction is CCAuction) {
+                jsonGenerator.writeObjectField("supplementaryRounds", auction.supplementaryRounds)
+                jsonGenerator.writeStringField("currentRoundType", auction.currentRoundType.toString())
+            }
             jsonGenerator.writeArrayFieldStart("rounds")
-            for (i in 0 until auction.rounds) {
+            for (i in 0 until auction.numberOfRounds) {
                 jsonGenerator.writeObject(auction.getRound(i))
             }
             jsonGenerator.writeEndArray()
+            jsonGenerator.writeObjectFieldStart("restrictedBids")
+            auction.restrictedBids().forEach{ jsonGenerator.writeObjectField(it.key.id.toString(), it.value) }
+            jsonGenerator.writeEndObject()
+            jsonGenerator.writeNumberField("allowedNumberOfBids", auction.allowedNumberOfBids())
             jsonGenerator.writeEndObject()
         }
     }

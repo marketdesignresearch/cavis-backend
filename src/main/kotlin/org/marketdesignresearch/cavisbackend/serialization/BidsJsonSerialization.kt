@@ -4,8 +4,6 @@ import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.JsonSerializer
 import com.fasterxml.jackson.databind.SerializerProvider
-import org.marketdesignresearch.cavisbackend.management.AuctionWrapper
-import org.marketdesignresearch.mechlib.domain.auction.Auction
 import org.marketdesignresearch.mechlib.domain.bid.Bids
 import org.springframework.boot.jackson.JsonComponent
 import java.io.IOException
@@ -27,7 +25,7 @@ class BidsJsonSerialization {
                     jsonGenerator.writeStringField("id", bundleBid.id)
                     jsonGenerator.writeNumberField("amount", bundleBid.amount)
                     jsonGenerator.writeObjectField("bundle", bundleBid.bundle)
-                    jsonGenerator.writeStringField("bidderId", bidder.id)
+                    jsonGenerator.writeStringField("bidderId", bidder.id.toString())
                     jsonGenerator.writeEndObject()
                 }
             }

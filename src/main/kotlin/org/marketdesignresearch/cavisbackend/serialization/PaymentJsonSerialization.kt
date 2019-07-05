@@ -21,7 +21,7 @@ class PaymentJsonSerialization {
 
             jsonGenerator.writeStartObject()
             jsonGenerator.writeNumberField("totalPayments", payment.totalPayments)
-            payment.paymentMap.forEach { jsonGenerator.writeNumberField(it.key.id, it.value.amount) }
+            payment.paymentMap.forEach { jsonGenerator.writeNumberField(it.key.id.toString(), it.value.amount) }
             jsonGenerator.writeEndObject()
         }
     }

@@ -4,10 +4,7 @@ import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.JsonSerializer
 import com.fasterxml.jackson.databind.SerializerProvider
-import org.marketdesignresearch.cavisbackend.management.AuctionWrapper
 import org.marketdesignresearch.mechlib.domain.Bundle
-import org.marketdesignresearch.mechlib.domain.auction.Auction
-import org.marketdesignresearch.mechlib.domain.bid.Bids
 import org.springframework.boot.jackson.JsonComponent
 import java.io.IOException
 
@@ -24,7 +21,7 @@ class BundleJsonSerialization {
             jsonGenerator.writeStartArray()
             for (entry in bundle.bundleEntries) {
                 jsonGenerator.writeStartObject()
-                jsonGenerator.writeObjectField("good", entry.good.id)
+                jsonGenerator.writeStringField("good", entry.good.id)
                 jsonGenerator.writeNumberField("amount", entry.amount)
                 jsonGenerator.writeEndObject()
            }
