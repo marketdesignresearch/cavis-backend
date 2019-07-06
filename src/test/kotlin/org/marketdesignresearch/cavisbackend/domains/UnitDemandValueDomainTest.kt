@@ -8,7 +8,6 @@ import org.marketdesignresearch.mechlib.domain.SimpleGood
 import org.marketdesignresearch.mechlib.domain.bidder.Bidder
 import org.marketdesignresearch.mechlib.domain.price.LinearPrices
 import org.marketdesignresearch.mechlib.domain.price.Price
-import org.marketdesignresearch.mechlib.domain.price.Prices
 import java.math.BigDecimal
 
 class UnitDemandValueDomainTest {
@@ -26,7 +25,7 @@ class UnitDemandValueDomainTest {
 
     @Test
     fun `Should create valid Additive Value Domain`() {
-        val domain = UnitDemandValueDomain(
+        val domain = UnitDemandValueDomainWrapper(
                 listOf(PerItemBidder("1", 10, 10),
                         PerItemBidder("2", 13, 13),
                         PerItemBidder("3", 16, 16)),
