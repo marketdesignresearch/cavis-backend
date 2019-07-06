@@ -12,7 +12,7 @@ services:
     build:
       context: ../cavis-frontend
       args:
-        VUE_APP_API_URL: http://localhost:8080
+        VUE_APP_API_URL: http://abi.ifi.uzh.ch:8080
     depends_on:
       - api
     ports:
