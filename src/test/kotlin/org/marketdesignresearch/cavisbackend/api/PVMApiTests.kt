@@ -16,6 +16,10 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.assertj.core.api.Assertions.*
+import org.marketdesignresearch.cavisbackend.server.JSONBid
+import org.marketdesignresearch.mechlib.auction.cca.CCARound
+import java.util.*
+import kotlin.collections.HashMap
 
 @RunWith(SpringRunner::class)
 @SpringBootTest
@@ -116,6 +120,7 @@ class PVMApiTests {
                 .andDo { logger.info("Request: {} | Response: {}", it.request.contentAsString, it.response.contentAsString) }
                 .andExpect(status().isOk)
                 .andExpect(jsonPath("$.auction.rounds[0]").exists())
+                .andExpect(jsonPath("$.auction.rounds[1]").doesNotExist())
                 .andExpect(jsonPath("$.auction.restrictedBids").exists())
                 .andExpect(jsonPath("$.auction.restrictedBids.$bidder1Id").isArray)
                 .andExpect(jsonPath("$.auction.restrictedBids.$bidder2Id").isArray)
@@ -135,11 +140,35 @@ class PVMApiTests {
                 .andDo { logger.info("Request: {} | Response: {}", it.request.contentAsString, it.response.contentAsString) }
                 .andExpect(status().isOk)
                 .andExpect(jsonPath("$.auction.rounds[0]").exists())
+                .andExpect(jsonPath("$.auction.rounds[1]").exists())
+                .andExpect(jsonPath("$.auction.rounds[2]").doesNotExist())
                 .andExpect(jsonPath("$.auction.restrictedBids").exists())
                 .andExpect(jsonPath("$.auction.restrictedBids.$bidder1Id").isArray)
                 .andExpect(jsonPath("$.auction.restrictedBids.$bidder2Id").isArray)
                 .andExpect(jsonPath("$.auction.restrictedBids.$bidder3Id").isArray)
                 .andExpect(jsonPath("$.auction.allowedNumberOfBids").value(1))
+
+        val bids = JSONArray(mvc.perform(post("/auctions/$id/propose"))
+                .andDo { logger.info("Request: {} | Response: {}", it.request.contentAsString, it.response.contentAsString) }
+                .andExpect(status().isOk)
+                .andReturn().response.contentAsString)
+
+        // Advance, to check if the proposed bids were the actually applied bids
+        val nextRoundBids = JSONObject(mvc.perform(post("/auctions/$id/advance"))
+                .andDo { logger.info("Request: {} | Response: {}", it.request.contentAsString, it.response.contentAsString) }
+                .andExpect(status().isOk)
+                .andExpect(jsonPath("$.auction.rounds[0]").exists())
+                .andExpect(jsonPath("$.auction.rounds[1]").exists())
+                .andExpect(jsonPath("$.auction.rounds[2]").exists())
+                .andExpect(jsonPath("$.auction.rounds[3]").doesNotExist())
+                .andExpect(jsonPath("$.auction.restrictedBids").exists())
+                .andExpect(jsonPath("$.auction.restrictedBids.$bidder1Id").isArray)
+                .andExpect(jsonPath("$.auction.restrictedBids.$bidder2Id").isArray)
+                .andExpect(jsonPath("$.auction.restrictedBids.$bidder3Id").isArray)
+                .andExpect(jsonPath("$.auction.allowedNumberOfBids").value(1))
+                .andReturn().response.contentAsString).getJSONObject("auction").getJSONArray("rounds").getJSONObject(2).getJSONArray("bids")
+
+        assertThat(bids.toString()).isEqualTo(nextRoundBids.toString())
 
         // TODO: Place valid bids, close auction
 

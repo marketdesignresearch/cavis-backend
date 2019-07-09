@@ -22,7 +22,7 @@ class BidsJsonSerialization {
             for ((bidder, bid) in bids.bidMap) {
                 for (bundleBid in bid.bundleBids) {
                     jsonGenerator.writeStartObject()
-                    jsonGenerator.writeStringField("id", bundleBid.id)
+                    //jsonGenerator.writeStringField("id", bundleBid.id)
                     jsonGenerator.writeNumberField("amount", bundleBid.amount)
                     jsonGenerator.writeObjectField("bundle", bundleBid.bundle)
                     jsonGenerator.writeStringField("bidderId", bidder.id.toString())

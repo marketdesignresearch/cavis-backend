@@ -19,6 +19,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import java.math.BigDecimal
 import java.util.*
+import kotlin.collections.ArrayList
 import kotlin.collections.HashSet
 
 data class AuctionSetting(val domain: DomainWrapper, val auctionType: AuctionFactory)
@@ -50,7 +51,7 @@ class AuctionController {
     fun deleteAuction(@PathVariable uuid: UUID): ResponseEntity<Any> {
         val success = SessionManagement.delete(uuid)
         if (!success) return ResponseEntity.notFound().build()
-        return ResponseEntity.ok().build()
+        return ResponseEntity.noContent().build()
     }
 
     @PostMapping("/auctions/{uuid}/demandquery")
@@ -101,6 +102,17 @@ class AuctionController {
             return ResponseEntity.badRequest().body(e.message)
         }
         return ResponseEntity.ok(auctionWrapper)
+    }
+
+    @PostMapping("/auctions/{uuid}/propose", consumes = [])
+    fun advanceRound(@PathVariable uuid: UUID, @RequestBody body: ArrayList<UUID>?): ResponseEntity<Bids> {
+        val auctionWrapper = SessionManagement.get(uuid) ?: return ResponseEntity.notFound().build()
+        val auction = auctionWrapper.auction
+        val uuids = body ?: arrayListOf()
+        if (uuids.isEmpty()) uuids.addAll(auction.domain.bidders.map{ it.id })
+        val bids = Bids()
+        uuids.forEach { bids.setBid(auction.getBidder(it), auction.proposeBid(auction.getBidder(it))) }
+        return ResponseEntity.ok(bids)
     }
 
     @PostMapping("/auctions/{uuid}/close-round", consumes = [])
