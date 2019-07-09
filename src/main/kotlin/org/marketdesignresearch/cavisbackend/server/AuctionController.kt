@@ -106,7 +106,7 @@ class AuctionController {
     }
 
     @PostMapping("/auctions/{uuid}/propose", consumes = [])
-    fun advanceRound(@PathVariable uuid: UUID, @RequestBody body: ArrayList<UUID>?): ResponseEntity<Bids> {
+    fun proposeBids(@PathVariable uuid: UUID, @RequestBody body: ArrayList<UUID>?): ResponseEntity<Bids> {
         val auctionWrapper = SessionManagement.get(uuid) ?: return ResponseEntity.notFound().build()
         val auction = auctionWrapper.auction
         val uuids = body ?: arrayListOf()
@@ -127,11 +127,38 @@ class AuctionController {
         return ResponseEntity.ok(auctionWrapper)
     }
 
-    @PostMapping("/auctions/{uuid}/advance", consumes = [])
+    @PostMapping("/auctions/{uuid}/advance-round", consumes = [])
     fun advanceRound(@PathVariable uuid: UUID): ResponseEntity<AuctionWrapper> {
         val auctionWrapper = SessionManagement.get(uuid) ?: return ResponseEntity.notFound().build()
         val auction = auctionWrapper.auction
         auction.nextRound()
+        // TODO: For now, we get result directly. I'll have to think about whether
+        //  I should make this the default in the MechLib, as for most auctions the result will be quickly available
+        auction.getAuctionResultAtRound(auction.numberOfRounds - 1)
+        return ResponseEntity.ok(auctionWrapper)
+    }
+
+    @PostMapping("/auctions/{uuid}/advance-phase", consumes = [])
+    fun advancePhase(@PathVariable uuid: UUID): ResponseEntity<AuctionWrapper> {
+        val auctionWrapper = SessionManagement.get(uuid) ?: return ResponseEntity.notFound().build()
+        val auction = auctionWrapper.auction
+        if (auction.currentPhaseFinished()) auction.nextRound() // Step out of the "finished" round
+        while (!auction.currentPhaseFinished()) {
+            auction.nextRound()
+        }
+        // TODO: For now, we get result directly. I'll have to think about whether
+        //  I should make this the default in the MechLib, as for most auctions the result will be quickly available
+        auction.getAuctionResultAtRound(auction.numberOfRounds - 1)
+        return ResponseEntity.ok(auctionWrapper)
+    }
+
+    @PostMapping("/auctions/{uuid}/finish", consumes = [])
+    fun finish(@PathVariable uuid: UUID): ResponseEntity<AuctionWrapper> {
+        val auctionWrapper = SessionManagement.get(uuid) ?: return ResponseEntity.notFound().build()
+        val auction = auctionWrapper.auction
+        while (!auction.finished()) {
+            auction.nextRound()
+        }
         // TODO: For now, we get result directly. I'll have to think about whether
         //  I should make this the default in the MechLib, as for most auctions the result will be quickly available
         auction.getAuctionResultAtRound(auction.numberOfRounds - 1)

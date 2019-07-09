@@ -119,7 +119,7 @@ class ApiTests {
                 .andDo { result -> logger.info(result.response.contentAsString) }
 
         mvc.perform(delete("/auctions/$id"))
-                .andExpect(status().isOk)
+                .andExpect(status().isNoContent)
                 .andDo { result -> logger.info(result.response.contentAsString) }
 
         mvc.perform(get("/auctions/$id"))
