@@ -2,7 +2,6 @@ package org.marketdesignresearch.cavisbackend.serialization
 
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.marketdesignresearch.mechlib.domain.Bundle
 import org.marketdesignresearch.mechlib.domain.SimpleGood
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.json.JsonTest
@@ -24,14 +23,14 @@ class SimpleGoodSerializationTest {
         val good = SimpleGood("A")
         val serialized = json?.write(good)
 
-        assertThat(serialized?.json).isEqualTo("{\"id\":\"A\",\"availability\":1,\"dummyGood\":false}")
+        assertThat(serialized?.json).isEqualTo("{\"name\":\"A\",\"id\":\"${good.uuid}\",\"availability\":1,\"dummyGood\":false}")
     }
 
     @Test
     fun deserialize() {
-        val serialized = "{\"id\":\"A\"}"
+        val serialized = "{\"name\":\"A\"}"
         val deserialized = json?.parseObject(serialized)
-        assertThat(deserialized?.id).isEqualTo("A")
+        assertThat(deserialized?.name).isEqualTo("A")
     }
 
 }

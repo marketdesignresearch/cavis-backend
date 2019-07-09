@@ -23,10 +23,10 @@ import kotlin.collections.ArrayList
 import kotlin.collections.HashSet
 
 data class AuctionSetting(val domain: DomainWrapper, val auctionType: AuctionFactory)
-data class JSONBid(val amount: BigDecimal, val bundle: Map<String, Int>)
+data class JSONBid(val amount: BigDecimal, val bundle: Map<UUID, Int>)
 data class ResetRequest(val round: Int)
-data class JSONDemandQuery(val prices: Map<String, Double> = emptyMap(), val bidders: List<String> = emptyList(), val numberOfBundles: Int = 1)
-data class JSONValueQuery(val bundle: Map<String, Int>, val bidders: List<String> = emptyList())
+data class JSONDemandQuery(val prices: Map<UUID, Double> = emptyMap(), val bidders: List<UUID> = emptyList(), val numberOfBundles: Int = 1)
+data class JSONValueQuery(val bundle: Map<UUID, Int>, val bidders: List<UUID> = emptyList())
 
 @CrossOrigin(origins = ["*"])
 @RestController
@@ -61,12 +61,13 @@ class AuctionController {
         val priceMap = hashMapOf<Good, Price>()
         body.prices.forEach{ priceMap[auction.getGood(it.key)] = Price.of(it.value) }
         val prices = LinearPrices(priceMap)
-        val bidders = if (body.bidders.isEmpty()) auction.domain.bidders else body.bidders.map{auction.getBidder(UUID.fromString(it))}
+        val bidders = if (body.bidders.isEmpty()) auction.domain.bidders else body.bidders.map{auction.getBidder(it)}
         val result = hashMapOf<String, List<Bundle>>()
         bidders.forEach { result[it.id.toString()] = it.getBestBundles(prices, body.numberOfBundles) }
         return ResponseEntity.ok(result)
     }
 
+    // TODO: Generalize for multiple bundles
     @PostMapping("/auctions/{uuid}/valuequery")
     fun postValueQuery(@PathVariable uuid: UUID, @RequestBody body: JSONValueQuery): ResponseEntity<Map<String, BigDecimal>> {
         val auctionWrapper = SessionManagement.get(uuid) ?: return ResponseEntity.notFound().build()
@@ -74,7 +75,7 @@ class AuctionController {
         val bundleEntries = hashSetOf<BundleEntry>()
         body.bundle.forEach { (k, v) -> bundleEntries.add(BundleEntry(auction.getGood(k), v)) }
         val bundle = Bundle(bundleEntries)
-        val bidders = if (body.bidders.isEmpty()) auction.domain.bidders else body.bidders.map{auction.getBidder(UUID.fromString(it))}
+        val bidders = if (body.bidders.isEmpty()) auction.domain.bidders else body.bidders.map{auction.getBidder(it)}
         val result = hashMapOf<String, BigDecimal>()
         bidders.forEach { result[it.id.toString()] = it.getValue(bundle) }
         return ResponseEntity.ok(result)

@@ -47,18 +47,14 @@ class ApiTests {
                 .andExpect(jsonPath("$.auction.domain").exists())
                 .andExpect(jsonPath("$.auction.domain.bidders").exists())
                 .andExpect(jsonPath("$.auction.domain.bidders[0].id").isString)
-                .andExpect(jsonPath("$.auction.domain.bidders[0].name").isString)
                 .andExpect(jsonPath("$.auction.domain.bidders[0].name").value("A"))
                 .andExpect(jsonPath("$.auction.domain.bidders[1].id").isString)
-                .andExpect(jsonPath("$.auction.domain.bidders[1].name").isString)
                 .andExpect(jsonPath("$.auction.domain.bidders[1].name").value("B"))
                 .andExpect(jsonPath("$.auction.domain.goods").exists())
                 .andExpect(jsonPath("$.auction.domain.goods[0]").exists())
                 .andExpect(jsonPath("$.auction.domain.goods[0].id").isString)
-                .andExpect(jsonPath("$.auction.domain.goods[0].id").value("item"))
-                .andExpect(jsonPath("$.auction.domain.goods[0].availability").isNumber)
+                .andExpect(jsonPath("$.auction.domain.goods[0].name").value("item"))
                 .andExpect(jsonPath("$.auction.domain.goods[0].availability").value(1))
-                .andExpect(jsonPath("$.auction.domain.goods[0].dummyGood").isBoolean)
                 .andExpect(jsonPath("$.auction.domain.goods[0].dummyGood").value(false))
                 .andExpect(jsonPath("$.auction.rounds").isArray)
                 .andExpect(jsonPath("$.auction.rounds").isEmpty)
@@ -137,10 +133,11 @@ class ApiTests {
         val id = created.getString("id")
         val bidder1Uuid = created.getJSONObject("auction").getJSONObject("domain").getJSONArray("bidders").getJSONObject(0).getString("id")
         val bidder2Uuid = created.getJSONObject("auction").getJSONObject("domain").getJSONArray("bidders").getJSONObject(1).getString("id")
+        val itemUuid = created.getJSONObject("auction").getJSONObject("domain").getJSONArray("goods").getJSONObject(0).getString("id")
 
         val demandQueryContent = JSONObject()
                 .put("prices", JSONObject()
-                        .put("item", 0))
+                        .put(itemUuid, 0))
                 .put("bidders", JSONArray().put(bidder1Uuid))
                 .put("numberOfBundles", 3)
 
@@ -165,7 +162,7 @@ class ApiTests {
                 .andExpect(jsonPath("$.$bidder1Uuid").isArray)
                 .andExpect(jsonPath("$.$bidder1Uuid[0]").isArray)
                 .andExpect(jsonPath("$.$bidder1Uuid[1]").doesNotExist())
-                .andExpect(jsonPath("$.$bidder1Uuid[0][0].good").value("item"))
+                .andExpect(jsonPath("$.$bidder1Uuid[0][0].good").value(itemUuid))
                 .andExpect(jsonPath("$.$bidder1Uuid[0][0].amount").value(1))
                 .andExpect(jsonPath("$.$bidder1Uuid[0][1]").doesNotExist())
                 .andExpect(jsonPath("$.$bidder2Uuid").doesNotExist())
@@ -178,12 +175,12 @@ class ApiTests {
                 .andExpect(jsonPath("$.$bidder1Uuid").isArray)
                 .andExpect(jsonPath("$.$bidder1Uuid[0]").isArray)
                 .andExpect(jsonPath("$.$bidder1Uuid[1]").doesNotExist())
-                .andExpect(jsonPath("$.$bidder1Uuid[0][0].good").value("item"))
+                .andExpect(jsonPath("$.$bidder1Uuid[0][0].good").value(itemUuid))
                 .andExpect(jsonPath("$.$bidder1Uuid[0][0].amount").value(1))
                 .andExpect(jsonPath("$.$bidder1Uuid[0][1]").doesNotExist())
                 .andExpect(jsonPath("$.$bidder2Uuid").isArray)
                 .andExpect(jsonPath("$.$bidder2Uuid[1]").doesNotExist())
-                .andExpect(jsonPath("$.$bidder2Uuid[0][0].good").value("item"))
+                .andExpect(jsonPath("$.$bidder2Uuid[0][0].good").value(itemUuid))
                 .andExpect(jsonPath("$.$bidder2Uuid[0][0].amount").value(1))
                 .andExpect(jsonPath("$.$bidder2Uuid[0][1]").doesNotExist())
                 .andDo { result -> logger.info("Request: {} | Response: {}", result.request.contentAsString, result.response.contentAsString) }
@@ -191,7 +188,7 @@ class ApiTests {
         mvc.perform(
                 post("/auctions/$id/demandquery")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(JSONObject().put("prices", JSONObject().put("item", 500000)).toString()))
+                        .content(JSONObject().put("prices", JSONObject().put(itemUuid, 500000)).toString()))
                 .andExpect(status().isOk)
                 .andExpect(jsonPath("$.$bidder1Uuid").isArray)
                 .andExpect(jsonPath("$.$bidder1Uuid[0]").isArray)
@@ -210,10 +207,11 @@ class ApiTests {
         val id = created.getString("id")
         val bidder1Uuid = created.getJSONObject("auction").getJSONObject("domain").getJSONArray("bidders").getJSONObject(0).getString("id")
         val bidder2Uuid = created.getJSONObject("auction").getJSONObject("domain").getJSONArray("bidders").getJSONObject(1).getString("id")
+        val itemUuid = created.getJSONObject("auction").getJSONObject("domain").getJSONArray("goods").getJSONObject(0).getString("id")
 
         val valueQueryContent = JSONObject()
                 .put("bundle", JSONObject()
-                        .put("item", 1))
+                        .put(itemUuid, 1))
                 .put("bidders", JSONArray().put(bidder1Uuid))
 
         // No content
@@ -263,11 +261,12 @@ class ApiTests {
         val id = created.getString("id")
         val bidder1Uuid = created.getJSONObject("auction").getJSONObject("domain").getJSONArray("bidders").getJSONObject(0).getString("id")
         val bidder2Uuid = created.getJSONObject("auction").getJSONObject("domain").getJSONArray("bidders").getJSONObject(1).getString("id")
+        val itemUuid = created.getJSONObject("auction").getJSONObject("domain").getJSONArray("goods").getJSONObject(0).getString("id")
 
         mvc.perform(
                 post("/auctions/$id/bids")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(bids(bidder1Uuid, bidder2Uuid).toString()))
+                        .content(bids(bidder1Uuid, bidder2Uuid, itemUuid).toString()))
                 .andDo { logger.info("Request: {} | Response: {}", it.request.contentAsString, it.response.contentAsString) }
                 .andExpect(status().isOk)
                 .andExpect(jsonPath("$.id").value(id))
@@ -280,7 +279,8 @@ class ApiTests {
                 .andExpect(jsonPath("$.auction.rounds").isNotEmpty)
                 .andExpect(jsonPath("$.auction.rounds[0].mechanismResult").exists())
                 .andExpect(jsonPath("$.auction.rounds[0].mechanismResult.allocation.$bidder2Uuid.value").value(12))
-                .andExpect(jsonPath("$.auction.rounds[0].mechanismResult.allocation.$bidder2Uuid.goods.item").value(1))
+                .andExpect(jsonPath("$.auction.rounds[0].mechanismResult.allocation.$bidder2Uuid.bundle[0].good").value(itemUuid))
+                .andExpect(jsonPath("$.auction.rounds[0].mechanismResult.allocation.$bidder2Uuid.bundle[0].amount").value(1))
                 .andExpect(jsonPath("$.auction.rounds[0].mechanismResult.payments.totalPayments").value(10))
                 .andExpect(jsonPath("$.auction.rounds[0].mechanismResult.payments.$bidder2Uuid").value(10))
     }
@@ -291,12 +291,13 @@ class ApiTests {
         val id = created.getString("id")
         val bidder1Uuid = created.getJSONObject("auction").getJSONObject("domain").getJSONArray("bidders").getJSONObject(0).getString("id")
         val bidder2Uuid = created.getJSONObject("auction").getJSONObject("domain").getJSONArray("bidders").getJSONObject(1).getString("id")
+        val itemUuid = created.getJSONObject("auction").getJSONObject("domain").getJSONArray("goods").getJSONObject(0).getString("id")
 
         for (i in 0..4) {
             mvc.perform(
                     post("/auctions/$id/bids")
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content(bids(bidder1Uuid, bidder2Uuid).toString()))
+                            .content(bids(bidder1Uuid, bidder2Uuid, itemUuid).toString()))
                     .andExpect(status().isOk)
             mvc.perform(post("/auctions/$id/close-round"))
                     .andExpect(status().isOk)
@@ -349,7 +350,7 @@ class ApiTests {
                                     .put("name", "A"))
                             .put(JSONObject()
                                     .put("name", "B")))
-                    .put("goods", JSONArray().put(JSONObject().put("id", "item"))))
+                    .put("goods", JSONArray().put(JSONObject().put("name", "item"))))
             .put("auctionType", "SINGLE_ITEM_SECOND_PRICE")
 
     private fun created(): JSONObject = JSONObject(mvc.perform(
@@ -358,20 +359,21 @@ class ApiTests {
                     .content(body().toString()))
             .andReturn().response.contentAsString)
 
-    private fun bids(bidder1Uuid: String, bidder2Uuid: String): JSONObject = JSONObject()
-            .put(bidder1Uuid, JSONArray().put(JSONObject().put("amount", 10).put("bundle", JSONObject().put("item", 1))))
-            .put(bidder2Uuid, JSONArray().put(JSONObject().put("amount", 12).put("bundle", JSONObject().put("item", 1))))
+    private fun bids(bidder1Uuid: String, bidder2Uuid: String, itemUuid: String): JSONObject = JSONObject()
+            .put(bidder1Uuid, JSONArray().put(JSONObject().put("amount", 10).put("bundle", JSONObject().put(itemUuid, 1))))
+            .put(bidder2Uuid, JSONArray().put(JSONObject().put("amount", 12).put("bundle", JSONObject().put(itemUuid, 1))))
 
     private fun finished(): String {
         val created = created()
         val id = created.getString("id")
         val bidder1Uuid = created.getJSONObject("auction").getJSONObject("domain").getJSONArray("bidders").getJSONObject(0).getString("id")
         val bidder2Uuid = created.getJSONObject("auction").getJSONObject("domain").getJSONArray("bidders").getJSONObject(1).getString("id")
+        val itemUuid = created.getJSONObject("auction").getJSONObject("domain").getJSONArray("goods").getJSONObject(0).getString("id")
 
         mvc.perform(
                 post("/auctions/$id/bids")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(bids(bidder1Uuid, bidder2Uuid).toString()))
+                        .content(bids(bidder1Uuid, bidder2Uuid, itemUuid).toString()))
                 .andExpect(status().isOk)
         mvc.perform(post("/auctions/$id/close-round"))
                 .andExpect(status().isOk)
