@@ -3,13 +3,9 @@ package org.marketdesignresearch.cavisbackend.domains
 import com.marcinmoskala.math.powerset
 import org.apache.commons.math3.distribution.UniformIntegerDistribution
 import org.marketdesignresearch.mechlib.domain.*
-import org.marketdesignresearch.mechlib.domain.bidder.ORBidder
 import org.marketdesignresearch.mechlib.domain.bidder.XORBidder
 import org.marketdesignresearch.mechlib.domain.bidder.value.BundleValue
-import org.marketdesignresearch.mechlib.domain.bidder.value.ORValue
 import org.marketdesignresearch.mechlib.domain.bidder.value.XORValue
-import org.slf4j.LoggerFactory
-import java.lang.UnsupportedOperationException
 import java.math.BigDecimal
 
 /**

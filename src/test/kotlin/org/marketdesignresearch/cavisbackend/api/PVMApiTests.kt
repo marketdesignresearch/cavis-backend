@@ -36,6 +36,10 @@ class PVMApiTests {
         var bidder1Id: String? = null
         var bidder2Id: String? = null
         var bidder3Id: String? = null
+        var item1Id: String? = null
+        var item2Id: String? = null
+        var item3Id: String? = null
+        var item4Id: String? = null
 
         val body = JSONObject()
                 .put("domain", JSONObject()
@@ -48,10 +52,10 @@ class PVMApiTests {
                                 .put(JSONObject()
                                         .put("name", "3")))
                         .put("goods", JSONArray()
-                                .put(JSONObject().put("id", "A"))
-                                .put(JSONObject().put("id", "B"))
-                                .put(JSONObject().put("id", "C"))
-                                .put(JSONObject().put("id", "D"))))
+                                .put(JSONObject().put("name", "A"))
+                                .put(JSONObject().put("name", "B"))
+                                .put(JSONObject().put("name", "C"))
+                                .put(JSONObject().put("name", "D"))))
                 .put("auctionType", "PVM_VCG")
 
         mvc.perform(
@@ -64,9 +68,14 @@ class PVMApiTests {
                     val json = JSONObject(content)
                     id = json.getString("id")
                     val bidderArray = json.getJSONObject("auction").getJSONObject("domain").getJSONArray("bidders")
+                    val goodsArray = json.getJSONObject("auction").getJSONObject("domain").getJSONArray("goods")
                     bidder1Id = bidderArray.getJSONObject(0).getString("id")
                     bidder2Id = bidderArray.getJSONObject(1).getString("id")
                     bidder3Id = bidderArray.getJSONObject(2).getString("id")
+                    item1Id = goodsArray.getJSONObject(0).getString("id")
+                    item2Id = goodsArray.getJSONObject(1).getString("id")
+                    item3Id = goodsArray.getJSONObject(2).getString("id")
+                    item4Id = goodsArray.getJSONObject(3).getString("id")
                 }
 
         mvc.perform(get("/auctions/$id"))
@@ -91,19 +100,23 @@ class PVMApiTests {
                 .andExpect(jsonPath("$.auction.domain.bidders[2].name").value("3"))
                 .andExpect(jsonPath("$.auction.domain.goods").exists())
                 .andExpect(jsonPath("$.auction.domain.goods[0]").exists())
-                .andExpect(jsonPath("$.auction.domain.goods[0].id").isString)
-                .andExpect(jsonPath("$.auction.domain.goods[0].id").value("A"))
-                .andExpect(jsonPath("$.auction.domain.goods[0].availability").isNumber)
+                .andExpect(jsonPath("$.auction.domain.goods[0].id").value(item1Id!!))
+                .andExpect(jsonPath("$.auction.domain.goods[0].name").value("A"))
                 .andExpect(jsonPath("$.auction.domain.goods[0].availability").value(1))
-                .andExpect(jsonPath("$.auction.domain.goods[0].dummyGood").isBoolean)
                 .andExpect(jsonPath("$.auction.domain.goods[0].dummyGood").value(false))
                 .andExpect(jsonPath("$.auction.domain.goods[1]").exists())
-                .andExpect(jsonPath("$.auction.domain.goods[1].id").isString)
-                .andExpect(jsonPath("$.auction.domain.goods[1].id").value("B"))
-                .andExpect(jsonPath("$.auction.domain.goods[1].availability").isNumber)
+                .andExpect(jsonPath("$.auction.domain.goods[1].id").value(item2Id!!))
+                .andExpect(jsonPath("$.auction.domain.goods[1].name").value("B"))
                 .andExpect(jsonPath("$.auction.domain.goods[1].availability").value(1))
-                .andExpect(jsonPath("$.auction.domain.goods[1].dummyGood").isBoolean)
                 .andExpect(jsonPath("$.auction.domain.goods[1].dummyGood").value(false))
+                .andExpect(jsonPath("$.auction.domain.goods[2].id").value(item3Id!!))
+                .andExpect(jsonPath("$.auction.domain.goods[2].name").value("C"))
+                .andExpect(jsonPath("$.auction.domain.goods[2].availability").value(1))
+                .andExpect(jsonPath("$.auction.domain.goods[2].dummyGood").value(false))
+                .andExpect(jsonPath("$.auction.domain.goods[3].id").value(item4Id!!))
+                .andExpect(jsonPath("$.auction.domain.goods[3].name").value("D"))
+                .andExpect(jsonPath("$.auction.domain.goods[3].availability").value(1))
+                .andExpect(jsonPath("$.auction.domain.goods[3].dummyGood").value(false))
                 .andExpect(jsonPath("$.auction.rounds").isArray)
                 .andExpect(jsonPath("$.auction.rounds").isEmpty)
                 .andExpect(jsonPath("$.auction.restrictedBids").exists())
@@ -126,8 +139,8 @@ class PVMApiTests {
                 post("/auctions/$id/bids")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(JSONObject()
-                                .put(bidder1Id, JSONArray().put(JSONObject().put("amount", 2).put("bundle", JSONObject().put("B", 1))))
-                                .put(bidder2Id, JSONArray().put(JSONObject().put("amount", 3).put("bundle", JSONObject().put("A", 1)))).toString()))
+                                .put(bidder1Id, JSONArray().put(JSONObject().put("amount", 2).put("bundle", JSONObject().put(item2Id, 1))))
+                                .put(bidder2Id, JSONArray().put(JSONObject().put("amount", 3).put("bundle", JSONObject().put(item1Id, 1)))).toString()))
                 .andDo { logger.info("Request: {} | Response: {}", it.request.contentAsString, it.response.contentAsString) }
                 .andExpect(status().isBadRequest)
 
