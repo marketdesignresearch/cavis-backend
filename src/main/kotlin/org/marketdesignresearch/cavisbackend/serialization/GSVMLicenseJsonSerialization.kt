@@ -18,7 +18,9 @@ class GSVMLicenseJsonSerialization {
                                serializerProvider: SerializerProvider) {
 
             jsonGenerator.writeStartObject()
-            jsonGenerator.writeStringField("id", gsvmLicense.id)
+            jsonGenerator.writeStringField("id", gsvmLicense.uuid.toString())
+            jsonGenerator.writeStringField("name", gsvmLicense.name)
+            jsonGenerator.writeNumberField("longId", gsvmLicense.longId)
             jsonGenerator.writeNumberField("position", gsvmLicense.position)
             jsonGenerator.writeStringField("circle", if (gsvmLicense.world.nationalCircle.licenses.contains(gsvmLicense)) "national" else "regional")
             jsonGenerator.writeNumberField("availability", gsvmLicense.available())

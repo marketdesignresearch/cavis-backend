@@ -20,7 +20,7 @@ class LinearPricesJsonSerialization {
                                serializerProvider: SerializerProvider) {
 
             jsonGenerator.writeStartObject()
-            linearPrices.entrySet().forEach { jsonGenerator.writeObjectField(it.key.id, it.value.amount) }
+            linearPrices.entrySet().forEach { jsonGenerator.writeObjectField(it.key.uuid.toString(), it.value.amount) }
             jsonGenerator.writeEndObject()
         }
     }
