@@ -28,8 +28,16 @@ enum class AuctionFactory {
             SINGLE_ITEM_SECOND_PRICE, SIMULTANEOUS_SECOND_PRICE -> Auction(domain, MechanismType.SECOND_PRICE)
             SEQUENTIAL_FIRST_PRICE -> SequentialAuction(domain, MechanismType.FIRST_PRICE)
             SEQUENTIAL_SECOND_PRICE -> SequentialAuction(domain, MechanismType.SECOND_PRICE)
-            VCG_XOR -> Auction(domain, MechanismType.VCG_XOR)
-            VCG_OR -> Auction(domain, MechanismType.VCG_OR)
+            VCG_XOR -> {
+                val auction = Auction(domain, MechanismType.VCG_XOR)
+                auction.maxBids = 10
+                return auction
+            }
+            VCG_OR -> {
+                val auction = Auction(domain, MechanismType.VCG_OR)
+                auction.maxBids = 10
+                return auction
+            }
             CCA_VCG -> {
                 val cca = CCAuction(domain, MechanismType.VCG_XOR, true)
                 cca.addSupplementaryRound(ProfitMaximizingSupplementaryRound(cca).withNumberOfSupplementaryBids(10))
