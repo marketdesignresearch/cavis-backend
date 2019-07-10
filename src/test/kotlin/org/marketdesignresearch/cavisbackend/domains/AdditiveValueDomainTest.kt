@@ -16,13 +16,13 @@ class AdditiveValueDomainTest {
     private val goodA = SimpleGood("A")
     private val goodB = SimpleGood("B")
     private val goodC = SimpleGood("C")
-    private val A = Bundle.singleGoods(setOf(goodA))
-    private val B = Bundle.singleGoods(setOf(goodB))
-    private val C = Bundle.singleGoods(setOf(goodC))
-    private val AB = Bundle.singleGoods(setOf(goodA, goodB))
-    private val AC = Bundle.singleGoods(setOf(goodA, goodC))
-    private val BC = Bundle.singleGoods(setOf(goodB, goodC))
-    private val ABC = Bundle.singleGoods(setOf(goodA, goodB, goodC))
+    private val A = Bundle.of(goodA)
+    private val B = Bundle.of(goodB)
+    private val C = Bundle.of(goodC)
+    private val AB = Bundle.of(goodA, goodB)
+    private val AC = Bundle.of(goodA, goodC)
+    private val BC = Bundle.of(goodB, goodC)
+    private val ABC = Bundle.of(goodA, goodB, goodC)
 
     @Test
     fun `Should create valid Additive Value Domain`() {

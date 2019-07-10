@@ -23,7 +23,7 @@ class BundleSerializationTest {
     fun serialize() {
         val itemA = SimpleGood("A")
         val itemB = SimpleGood("B")
-        val bundle = Bundle.singleGoods(setOf(itemA, itemB))
+        val bundle = Bundle.of(itemA, itemB)
         val serialized = json?.write(bundle)
 
         assertThat(serialized?.json).isEqualTo("[{\"good\":\"${itemA.uuid}\",\"amount\":1},{\"good\":\"${itemB.uuid}\",\"amount\":1}]")
