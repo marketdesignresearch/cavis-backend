@@ -26,7 +26,8 @@ data class AuctionSetting(val domain: DomainWrapper, val auctionType: AuctionFac
 data class JSONBid(val amount: BigDecimal, val bundle: Map<UUID, Int>)
 data class ResetRequest(val round: Int)
 data class JSONDemandQuery(val prices: Map<UUID, Double> = emptyMap(), val bidders: List<UUID> = emptyList(), val numberOfBundles: Int = 1)
-data class JSONValueQuery(val bundle: Map<UUID, Int>, val bidders: List<UUID> = emptyList())
+data class JSONValueQuery(val bundles: List<Map<UUID, Int>>, val bidders: List<UUID> = emptyList())
+data class JSONValueQueryResponse(val value: BigDecimal, val bundle: Bundle)
 
 @CrossOrigin(origins = ["*"])
 @RestController
@@ -67,17 +68,25 @@ class AuctionController {
         return ResponseEntity.ok(result)
     }
 
-    // TODO: Generalize for multiple bundles
     @PostMapping("/auctions/{uuid}/valuequery")
-    fun postValueQuery(@PathVariable uuid: UUID, @RequestBody body: JSONValueQuery): ResponseEntity<Map<String, BigDecimal>> {
+    fun postValueQuery(@PathVariable uuid: UUID, @RequestBody body: JSONValueQuery): ResponseEntity<Map<String, List<JSONValueQueryResponse>>> {
         val auctionWrapper = SessionManagement.get(uuid) ?: return ResponseEntity.notFound().build()
         val auction = auctionWrapper.auction
-        val bundleEntries = hashSetOf<BundleEntry>()
-        body.bundle.forEach { (k, v) -> bundleEntries.add(BundleEntry(auction.getGood(k), v)) }
-        val bundle = Bundle(bundleEntries)
         val bidders = if (body.bidders.isEmpty()) auction.domain.bidders else body.bidders.map{auction.getBidder(it)}
-        val result = hashMapOf<String, BigDecimal>()
-        bidders.forEach { result[it.id.toString()] = it.getValue(bundle) }
+        val bundles = arrayListOf<Bundle>()
+        body.bundles.forEach {  val bundleEntries = hashSetOf<BundleEntry>()
+            it.forEach { (k, v) -> bundleEntries.add(BundleEntry(auction.getGood(k), v)) }
+            bundles.add(Bundle(bundleEntries))
+        }
+        val result = hashMapOf<String, List<JSONValueQueryResponse>>()
+        bidders.forEach { bidder ->
+            val list = arrayListOf<JSONValueQueryResponse>()
+            bundles.forEach { bundle ->
+                list.add(JSONValueQueryResponse(bidder.getValue(bundle), bundle))
+            }
+            result[bidder.id.toString()] = list
+        }
+
         return ResponseEntity.ok(result)
     }
 

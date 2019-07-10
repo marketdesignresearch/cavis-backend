@@ -210,8 +210,8 @@ class ApiTests {
         val itemUuid = created.getJSONObject("auction").getJSONObject("domain").getJSONArray("goods").getJSONObject(0).getString("id")
 
         val valueQueryContent = JSONObject()
-                .put("bundle", JSONObject()
-                        .put(itemUuid, 1))
+                .put("bundles", JSONArray()
+                        .put(JSONObject().put(itemUuid, 1)))
                 .put("bidders", JSONArray().put(bidder1Uuid))
 
         // No content
@@ -233,7 +233,13 @@ class ApiTests {
                         .content(valueQueryContent.toString()))
                 .andDo { result -> logger.info("Request: {} | Response: {}", result.request.contentAsString, result.response.contentAsString) }
                 .andExpect(status().isOk)
-                .andExpect(jsonPath("$.$bidder1Uuid").isNumber)
+                .andExpect(jsonPath("$.$bidder1Uuid").isArray)
+                .andExpect(jsonPath("$.$bidder1Uuid[0].value").isNumber)
+                .andExpect(jsonPath("$.$bidder1Uuid[0].bundle").isArray)
+                .andExpect(jsonPath("$.$bidder1Uuid[0].bundle[0].good").isString)
+                .andExpect(jsonPath("$.$bidder1Uuid[0].bundle[0].amount").isNumber)
+                .andExpect(jsonPath("$.$bidder1Uuid[0].bundle[1]").doesNotExist())
+                .andExpect(jsonPath("$.$bidder1Uuid[1]").doesNotExist())
                 .andExpect(jsonPath("$.$bidder2Uuid").doesNotExist())
 
         mvc.perform(
@@ -241,18 +247,20 @@ class ApiTests {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(valueQueryContent.put("bidders", null).toString()))
                 .andExpect(status().isOk)
-                .andExpect(jsonPath("$.$bidder1Uuid").isNumber)
-                .andExpect(jsonPath("$.$bidder2Uuid").isNumber)
+                .andExpect(jsonPath("$.$bidder1Uuid").isArray)
+                .andExpect(jsonPath("$.$bidder2Uuid").isArray)
                 .andDo { result -> logger.info("Request: {} | Response: {}", result.request.contentAsString, result.response.contentAsString) }
 
         mvc.perform(
                 post("/auctions/$id/valuequery")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"bundle\": {}}"))
+                        .content("{\"bundles\": []}"))
                 .andDo { result -> logger.info("Request: {} | Response: {}", result.request.contentAsString, result.response.contentAsString) }
                 .andExpect(status().isOk)
-                .andExpect(jsonPath("$.$bidder1Uuid").isNumber)
-                .andExpect(jsonPath("$.$bidder2Uuid").isNumber)
+                .andExpect(jsonPath("$.$bidder1Uuid").isArray)
+                .andExpect(jsonPath("$.$bidder1Uuid").isEmpty)
+                .andExpect(jsonPath("$.$bidder2Uuid").isArray)
+                .andExpect(jsonPath("$.$bidder2Uuid").isEmpty)
     }
 
     @Test
