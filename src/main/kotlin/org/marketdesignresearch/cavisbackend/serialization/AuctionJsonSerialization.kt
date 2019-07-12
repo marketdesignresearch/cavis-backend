@@ -5,7 +5,9 @@ import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.JsonSerializer
 import com.fasterxml.jackson.databind.SerializerProvider
 import org.marketdesignresearch.mechlib.auction.Auction
+import org.marketdesignresearch.mechlib.auction.cca.CCARound
 import org.marketdesignresearch.mechlib.auction.cca.CCAuction
+import org.marketdesignresearch.mechlib.auction.pvm.PVMAuction
 import org.springframework.boot.jackson.JsonComponent
 import java.io.IOException
 
@@ -26,7 +28,12 @@ class AuctionJsonSerialization {
             jsonGenerator.writeBooleanField("finished", auction.finished())
             if (auction is CCAuction) {
                 jsonGenerator.writeObjectField("supplementaryRounds", auction.supplementaryRounds)
-                jsonGenerator.writeStringField("currentRoundType", auction.currentRoundType.toString())
+                jsonGenerator.writeStringField("currentRoundType",
+                        if (auction.currentRoundType == CCARound.Type.CLOCK) "Clock Round"
+                        else "Supplementary Round")
+            }
+            if (auction is PVMAuction) {
+                jsonGenerator.writeStringField("currentRoundType", if (auction.numberOfRounds == 0) "Initial Round" else "Elicitation Round")
             }
             jsonGenerator.writeArrayFieldStart("rounds")
             for (i in 0 until auction.numberOfRounds) {
