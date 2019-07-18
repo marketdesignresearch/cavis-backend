@@ -18,7 +18,9 @@ class BundleJsonSerialization {
         override fun serialize(bundle: Bundle, jsonGenerator: JsonGenerator,
                                serializerProvider: SerializerProvider) {
 
-            jsonGenerator.writeStartArray()
+            jsonGenerator.writeStartObject()
+            jsonGenerator.writeNumberField("hash", bundle.hashCode())
+            jsonGenerator.writeArrayFieldStart("entries")
             for (entry in bundle.bundleEntries) {
                 jsonGenerator.writeStartObject()
                 jsonGenerator.writeStringField("good", entry.good.uuid.toString())
@@ -26,6 +28,7 @@ class BundleJsonSerialization {
                 jsonGenerator.writeEndObject()
             }
             jsonGenerator.writeEndArray()
+            jsonGenerator.writeEndObject()
         }
     }
 

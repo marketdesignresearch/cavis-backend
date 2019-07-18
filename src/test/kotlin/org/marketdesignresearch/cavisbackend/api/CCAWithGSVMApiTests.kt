@@ -96,7 +96,7 @@ class CCAWithGSVMApiTests {
                 .andExpect(jsonPath("$.auction.currentPrices").exists())
                 .andExpect(jsonPath("$.auction.currentPrices.$item1Id").isNumber)
                 .andExpect(jsonPath("$.auction.currentPrices.$item2Id").isNumber)
-                .andExpect(jsonPath("$.auction.currentRoundType").value("CLOCK"))
+                .andExpect(jsonPath("$.auction.currentRoundType").value("Clock Round"))
                 .andExpect(jsonPath("$.auction.supplementaryRounds").isArray)
 
         mvc.perform(
@@ -114,15 +114,17 @@ class CCAWithGSVMApiTests {
                 .andDo { logger.info("Request: {} | Response: {}", it.request.contentAsString, it.response.contentAsString) }
                 .andExpect(status().isOk)
                 .andExpect(jsonPath("$.id").value(id!!))
-                .andExpect(jsonPath("$.auction.currentRoundType").value("SUPPLEMENTARY"))
+                .andExpect(jsonPath("$.auction.currentRoundType").value("Supplementary Round"))
                 .andExpect(jsonPath("$.auction.rounds").isNotEmpty)
                 .andExpect(jsonPath("$.auction.rounds[0].mechanismResult").exists())
                 .andExpect(jsonPath("$.auction.rounds[0].mechanismResult.allocation.$bidder2Id.value").value(3))
-                .andExpect(jsonPath("$.auction.rounds[0].mechanismResult.allocation.$bidder2Id.bundle[0].good").value(item1Id!!))
-                .andExpect(jsonPath("$.auction.rounds[0].mechanismResult.allocation.$bidder2Id.bundle[0].amount").value(1))
+                .andExpect(jsonPath("$.auction.rounds[0].mechanismResult.allocation.$bidder2Id.bundle.hash").isNumber)
+                .andExpect(jsonPath("$.auction.rounds[0].mechanismResult.allocation.$bidder2Id.bundle.entries[0].good").value(item1Id!!))
+                .andExpect(jsonPath("$.auction.rounds[0].mechanismResult.allocation.$bidder2Id.bundle.entries[0].amount").value(1))
                 .andExpect(jsonPath("$.auction.rounds[0].mechanismResult.allocation.$bidder1Id.value").value(2))
-                .andExpect(jsonPath("$.auction.rounds[0].mechanismResult.allocation.$bidder1Id.bundle[0].good").value(item2Id!!))
-                .andExpect(jsonPath("$.auction.rounds[0].mechanismResult.allocation.$bidder1Id.bundle[0].amount").value(1))
+                .andExpect(jsonPath("$.auction.rounds[0].mechanismResult.allocation.$bidder1Id.bundle.hash").isNumber)
+                .andExpect(jsonPath("$.auction.rounds[0].mechanismResult.allocation.$bidder1Id.bundle.entries[0].good").value(item2Id!!))
+                .andExpect(jsonPath("$.auction.rounds[0].mechanismResult.allocation.$bidder1Id.bundle.entries[0].amount").value(1))
                 .andExpect(jsonPath("$.auction.rounds[0].mechanismResult.payments.totalPayments").value(0))
                 .andExpect(jsonPath("$.auction.rounds[0].type").value(CCARound.Type.CLOCK.name))
 

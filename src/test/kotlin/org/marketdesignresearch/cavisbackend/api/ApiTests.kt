@@ -160,11 +160,11 @@ class ApiTests {
                         .content(demandQueryContent.toString()))
                 .andExpect(status().isOk)
                 .andExpect(jsonPath("$.$bidder1Uuid").isArray)
-                .andExpect(jsonPath("$.$bidder1Uuid[0]").isArray)
+                .andExpect(jsonPath("$.$bidder1Uuid[0].hash").isNumber)
                 .andExpect(jsonPath("$.$bidder1Uuid[1]").doesNotExist())
-                .andExpect(jsonPath("$.$bidder1Uuid[0][0].good").value(itemUuid))
-                .andExpect(jsonPath("$.$bidder1Uuid[0][0].amount").value(1))
-                .andExpect(jsonPath("$.$bidder1Uuid[0][1]").doesNotExist())
+                .andExpect(jsonPath("$.$bidder1Uuid[0].entries[0].good").value(itemUuid))
+                .andExpect(jsonPath("$.$bidder1Uuid[0].entries[0].amount").value(1))
+                .andExpect(jsonPath("$.$bidder1Uuid[0].entries[1]").doesNotExist())
                 .andExpect(jsonPath("$.$bidder2Uuid").doesNotExist())
                 .andDo { result -> logger.info("Request: {} | Response: {}", result.request.contentAsString, result.response.contentAsString) }
         mvc.perform(
@@ -173,15 +173,17 @@ class ApiTests {
                         .content(demandQueryContent.put("bidders", null).toString()))
                 .andExpect(status().isOk)
                 .andExpect(jsonPath("$.$bidder1Uuid").isArray)
-                .andExpect(jsonPath("$.$bidder1Uuid[0]").isArray)
+                .andExpect(jsonPath("$.$bidder1Uuid[0].hash").isNumber)
                 .andExpect(jsonPath("$.$bidder1Uuid[1]").doesNotExist())
-                .andExpect(jsonPath("$.$bidder1Uuid[0][0].good").value(itemUuid))
-                .andExpect(jsonPath("$.$bidder1Uuid[0][0].amount").value(1))
-                .andExpect(jsonPath("$.$bidder1Uuid[0][1]").doesNotExist())
+                .andExpect(jsonPath("$.$bidder1Uuid[0].entries[0].good").value(itemUuid))
+                .andExpect(jsonPath("$.$bidder1Uuid[0].entries[0].amount").value(1))
+                .andExpect(jsonPath("$.$bidder1Uuid[0].entries[1]").doesNotExist())
                 .andExpect(jsonPath("$.$bidder2Uuid").isArray)
+                .andExpect(jsonPath("$.$bidder2Uuid[0].hash").isNumber)
                 .andExpect(jsonPath("$.$bidder2Uuid[1]").doesNotExist())
-                .andExpect(jsonPath("$.$bidder2Uuid[0][0].good").value(itemUuid))
-                .andExpect(jsonPath("$.$bidder2Uuid[0][0].amount").value(1))
+                .andExpect(jsonPath("$.$bidder2Uuid[0].entries[0].good").value(itemUuid))
+                .andExpect(jsonPath("$.$bidder2Uuid[0].entries[0].amount").value(1))
+                .andExpect(jsonPath("$.$bidder2Uuid[0].entries[1]").doesNotExist())
                 .andExpect(jsonPath("$.$bidder2Uuid[0][1]").doesNotExist())
                 .andDo { result -> logger.info("Request: {} | Response: {}", result.request.contentAsString, result.response.contentAsString) }
 
@@ -191,12 +193,12 @@ class ApiTests {
                         .content(JSONObject().put("prices", JSONObject().put(itemUuid, 500000)).toString()))
                 .andExpect(status().isOk)
                 .andExpect(jsonPath("$.$bidder1Uuid").isArray)
-                .andExpect(jsonPath("$.$bidder1Uuid[0]").isArray)
-                .andExpect(jsonPath("$.$bidder1Uuid[0]").isEmpty)
+                .andExpect(jsonPath("$.$bidder1Uuid[0].hash").isNumber)
+                .andExpect(jsonPath("$.$bidder1Uuid[0].entries").isEmpty)
                 .andExpect(jsonPath("$.$bidder1Uuid[1]").doesNotExist())
                 .andExpect(jsonPath("$.$bidder2Uuid").isArray)
-                .andExpect(jsonPath("$.$bidder1Uuid[0]").isArray)
-                .andExpect(jsonPath("$.$bidder2Uuid[0]").isEmpty)
+                .andExpect(jsonPath("$.$bidder1Uuid[0].hash").isNumber)
+                .andExpect(jsonPath("$.$bidder2Uuid[0].entries").isEmpty)
                 .andExpect(jsonPath("$.$bidder2Uuid[1]").doesNotExist())
                 .andDo { result -> logger.info("Request: {} | Response: {}", result.request.contentAsString, result.response.contentAsString) }
     }
@@ -235,10 +237,10 @@ class ApiTests {
                 .andExpect(status().isOk)
                 .andExpect(jsonPath("$.$bidder1Uuid").isArray)
                 .andExpect(jsonPath("$.$bidder1Uuid[0].value").isNumber)
-                .andExpect(jsonPath("$.$bidder1Uuid[0].bundle").isArray)
-                .andExpect(jsonPath("$.$bidder1Uuid[0].bundle[0].good").isString)
-                .andExpect(jsonPath("$.$bidder1Uuid[0].bundle[0].amount").isNumber)
-                .andExpect(jsonPath("$.$bidder1Uuid[0].bundle[1]").doesNotExist())
+                .andExpect(jsonPath("$.$bidder1Uuid[0].bundle.hash").isNumber)
+                .andExpect(jsonPath("$.$bidder1Uuid[0].bundle.entries[0].good").isString)
+                .andExpect(jsonPath("$.$bidder1Uuid[0].bundle.entries[0].amount").isNumber)
+                .andExpect(jsonPath("$.$bidder1Uuid[0].bundle.entries[1]").doesNotExist())
                 .andExpect(jsonPath("$.$bidder1Uuid[1]").doesNotExist())
                 .andExpect(jsonPath("$.$bidder2Uuid").doesNotExist())
 
@@ -287,27 +289,28 @@ class ApiTests {
                 .andExpect(jsonPath("$.auction.rounds").isNotEmpty)
                 .andExpect(jsonPath("$.auction.rounds[0].mechanismResult").exists())
                 .andExpect(jsonPath("$.auction.rounds[0].mechanismResult.allocation.$bidder2Uuid.value").value(12))
-                .andExpect(jsonPath("$.auction.rounds[0].mechanismResult.allocation.$bidder2Uuid.bundle[0].good").value(itemUuid))
-                .andExpect(jsonPath("$.auction.rounds[0].mechanismResult.allocation.$bidder2Uuid.bundle[0].amount").value(1))
+                .andExpect(jsonPath("$.auction.rounds[0].mechanismResult.allocation.$bidder2Uuid.bundle.hash").isNumber)
+                .andExpect(jsonPath("$.auction.rounds[0].mechanismResult.allocation.$bidder2Uuid.bundle.entries[0].good").value(itemUuid))
+                .andExpect(jsonPath("$.auction.rounds[0].mechanismResult.allocation.$bidder2Uuid.bundle.entries[0].amount").value(1))
                 .andExpect(jsonPath("$.auction.rounds[0].mechanismResult.payments.totalPayments").value(10))
                 .andExpect(jsonPath("$.auction.rounds[0].mechanismResult.payments.$bidder2Uuid").value(10))
     }
 
     @Test
     fun `Should reset auction`() {
-        val created = created()
+        val body = JSONObject()
+                .put("domain", JSONObject()
+                        .put("type", "gsvm"))
+                .put("auctionType", "CCA_VCG")
+        val created = JSONObject(mvc.perform(
+                post("/auctions/")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body.toString()))
+                .andReturn().response.contentAsString)
         val id = created.getString("id")
-        val bidder1Uuid = created.getJSONObject("auction").getJSONObject("domain").getJSONArray("bidders").getJSONObject(0).getString("id")
-        val bidder2Uuid = created.getJSONObject("auction").getJSONObject("domain").getJSONArray("bidders").getJSONObject(1).getString("id")
-        val itemUuid = created.getJSONObject("auction").getJSONObject("domain").getJSONArray("goods").getJSONObject(0).getString("id")
 
         for (i in 0..4) {
-            mvc.perform(
-                    post("/auctions/$id/bids")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(bids(bidder1Uuid, bidder2Uuid, itemUuid).toString()))
-                    .andExpect(status().isOk)
-            mvc.perform(post("/auctions/$id/close-round"))
+            mvc.perform(post("/auctions/$id/advance-round"))
                     .andExpect(status().isOk)
         }
 
@@ -328,6 +331,11 @@ class ApiTests {
                         .content("{\"round\": 3}"))
                 .andDo { logger.info("Request: {} | Response: {}", it.request.contentAsString, it.response.contentAsString) }
                 .andExpect(status().isOk)
+                .andExpect(jsonPath("$").isArray)
+
+        mvc.perform(get("/auctions/$id/"))
+                .andDo { logger.info("Request: {} | Response: {}", it.request.contentAsString, it.response.contentAsString) }
+                .andExpect(status().isOk)
                 .andExpect(jsonPath("$.auction.rounds").isNotEmpty)
                 .andExpect(jsonPath("$.auction.rounds").isArray)
                 .andExpect(jsonPath("$.auction.rounds[0].bids").exists())
@@ -335,7 +343,6 @@ class ApiTests {
                 .andExpect(jsonPath("$.auction.rounds[2].bids").exists())
                 .andExpect(jsonPath("$.auction.rounds[3].bids").doesNotExist())
                 .andExpect(jsonPath("$.auction.rounds[4].bids").doesNotExist())
-
 
     }
 

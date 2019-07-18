@@ -19,12 +19,11 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import java.math.BigDecimal
 import java.util.*
-import kotlin.collections.ArrayList
 import kotlin.collections.HashSet
 
 data class AuctionSetting(val domain: DomainWrapper, val auctionType: AuctionFactory)
 data class JSONBid(val amount: BigDecimal, val bundle: Map<UUID, Int>)
-data class ResetRequest(val round: Int)
+data class PerRoundRequest(val round: Int)
 data class JSONDemandQuery(val prices: Map<UUID, Double> = emptyMap(), val bidders: List<UUID> = emptyList(), val numberOfBundles: Int = 1)
 data class JSONValueQuery(val bundles: List<Map<UUID, Int>>, val bidders: List<UUID> = emptyList())
 data class JSONValueQueryResponse(val value: BigDecimal, val bundle: Bundle)
@@ -60,9 +59,9 @@ class AuctionController {
         val auctionWrapper = SessionManagement.get(uuid) ?: return ResponseEntity.notFound().build()
         val auction = auctionWrapper.auction
         val priceMap = hashMapOf<Good, Price>()
-        body.prices.forEach{ priceMap[auction.getGood(it.key)] = Price.of(it.value) }
+        body.prices.forEach { priceMap[auction.getGood(it.key)] = Price.of(it.value) }
         val prices = LinearPrices(priceMap)
-        val bidders = if (body.bidders.isEmpty()) auction.domain.bidders else body.bidders.map{auction.getBidder(it)}
+        val bidders = if (body.bidders.isEmpty()) auction.domain.bidders else body.bidders.map { auction.getBidder(it) }
         val result = hashMapOf<String, List<Bundle>>()
         bidders.forEach { result[it.id.toString()] = it.getBestBundles(prices, body.numberOfBundles) }
         return ResponseEntity.ok(result)
@@ -72,9 +71,10 @@ class AuctionController {
     fun postValueQuery(@PathVariable uuid: UUID, @RequestBody body: JSONValueQuery): ResponseEntity<Map<String, List<JSONValueQueryResponse>>> {
         val auctionWrapper = SessionManagement.get(uuid) ?: return ResponseEntity.notFound().build()
         val auction = auctionWrapper.auction
-        val bidders = if (body.bidders.isEmpty()) auction.domain.bidders else body.bidders.map{auction.getBidder(it)}
+        val bidders = if (body.bidders.isEmpty()) auction.domain.bidders else body.bidders.map { auction.getBidder(it) }
         val bundles = arrayListOf<Bundle>()
-        body.bundles.forEach {  val bundleEntries = hashSetOf<BundleEntry>()
+        body.bundles.forEach {
+            val bundleEntries = hashSetOf<BundleEntry>()
             it.forEach { (k, v) -> bundleEntries.add(BundleEntry(auction.getGood(k), v)) }
             bundles.add(Bundle(bundleEntries))
         }
@@ -119,7 +119,7 @@ class AuctionController {
         val auctionWrapper = SessionManagement.get(uuid) ?: return ResponseEntity.notFound().build()
         val auction = auctionWrapper.auction
         val uuids = body ?: arrayListOf()
-        if (uuids.isEmpty()) uuids.addAll(auction.domain.bidders.map{ it.id })
+        if (uuids.isEmpty()) uuids.addAll(auction.domain.bidders.map { it.id })
         val bids = Bids()
         uuids.forEach { bids.setBid(auction.getBidder(it), auction.proposeBid(auction.getBidder(it))) }
         return ResponseEntity.ok(bids)
@@ -175,20 +175,31 @@ class AuctionController {
     }
 
     @PutMapping("/auctions/{uuid}/reset")
-    fun resetAuction(@PathVariable uuid: UUID, @RequestBody body: ResetRequest): ResponseEntity<AuctionWrapper> {
+    fun resetAuction(@PathVariable uuid: UUID, @RequestBody body: PerRoundRequest): ResponseEntity<Bids> {
         val auctionWrapper = SessionManagement.get(uuid) ?: return ResponseEntity.notFound().build()
-        try {
+        return try {
+            val bids = auctionWrapper.auction.getBidsAt(body.round)
             auctionWrapper.auction.resetToRound(body.round)
-        } catch(e: IllegalArgumentException) {
-            return ResponseEntity.badRequest().build()
+            ResponseEntity.ok(bids)
+        } catch (e: IllegalArgumentException) {
+            ResponseEntity.badRequest().build()
         }
-        return ResponseEntity.ok(auctionWrapper)
     }
-
 
     @GetMapping("/auctions/{uuid}/result")
-    fun getAllocation(@PathVariable uuid: UUID): ResponseEntity<MechanismResult> {
-        return ResponseEntity.of(Optional.ofNullable(SessionManagement.get(uuid)?.auction?.mechanismResult))
+    fun getResult(@PathVariable uuid: UUID): ResponseEntity<MechanismResult> {
+        val auctionWrapper = SessionManagement.get(uuid) ?: return ResponseEntity.notFound().build()
+        return ResponseEntity.ok(auctionWrapper.auction.mechanismResult)
     }
 
+    @GetMapping("/auctions/{uuid}/{round}/result")
+    fun getResult(@PathVariable uuid: UUID, @PathVariable round: Int): ResponseEntity<MechanismResult> {
+        val auctionWrapper = SessionManagement.get(uuid) ?: return ResponseEntity.notFound().build()
+        val mechanismResult = try {
+            auctionWrapper.auction.getAuctionResultAtRound(round)
+        } catch (e: IllegalArgumentException) {
+            return ResponseEntity.badRequest().build()
+        }
+        return ResponseEntity.ok(mechanismResult)
+    }
 }
