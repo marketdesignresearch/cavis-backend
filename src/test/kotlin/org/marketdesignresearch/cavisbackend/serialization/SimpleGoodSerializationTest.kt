@@ -23,7 +23,7 @@ class SimpleGoodSerializationTest {
         val good = SimpleGood("A")
         val serialized = json?.write(good)
 
-        assertThat(serialized?.json).isEqualTo("{\"name\":\"A\",\"id\":\"${good.uuid}\",\"availability\":1,\"dummyGood\":false}")
+        assertThat(serialized?.json).isEqualTo("{\"name\":\"A\",\"id\":\"${good.uuid}\",\"availability\":1}")
     }
 
     @Test

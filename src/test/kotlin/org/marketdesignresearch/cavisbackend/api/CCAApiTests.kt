@@ -96,12 +96,10 @@ class CCAApiTests {
                 .andExpect(jsonPath("$.auction.domain.goods[0].id").value(item1Id!!))
                 .andExpect(jsonPath("$.auction.domain.goods[0].name").value("A"))
                 .andExpect(jsonPath("$.auction.domain.goods[0].availability").value(1))
-                .andExpect(jsonPath("$.auction.domain.goods[0].dummyGood").value(false))
                 .andExpect(jsonPath("$.auction.domain.goods[1]").exists())
                 .andExpect(jsonPath("$.auction.domain.goods[1].id").value(item2Id!!))
                 .andExpect(jsonPath("$.auction.domain.goods[1].name").value("B"))
                 .andExpect(jsonPath("$.auction.domain.goods[1].availability").value(1))
-                .andExpect(jsonPath("$.auction.domain.goods[1].dummyGood").value(false))
                 .andExpect(jsonPath("$.auction.rounds").isArray)
                 .andExpect(jsonPath("$.auction.rounds").isEmpty)
                 .andExpect(jsonPath("$.auction.currentPrices").exists())
@@ -201,7 +199,7 @@ class CCAApiTests {
                 .getJSONObject(2)
         assertThatThrownBy { resultRound3.getJSONObject("mechanismResult") }.isExactlyInstanceOf(JSONException::class.java)
 
-        val result = JSONObject(mvc.perform(get("/auctions/$id/2/result"))
+        val result = JSONObject(mvc.perform(get("/auctions/$id/rounds/2/result"))
                 .andReturn().response.contentAsString)
 
         val newResultRound3 = JSONObject(mvc.perform(get("/auctions/$id/")).andReturn().response.contentAsString)

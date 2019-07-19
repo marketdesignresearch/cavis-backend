@@ -192,7 +192,7 @@ class AuctionController {
         return ResponseEntity.ok(auctionWrapper.auction.mechanismResult)
     }
 
-    @GetMapping("/auctions/{uuid}/{round}/result")
+    @GetMapping("/auctions/{uuid}/rounds/{round}/result")
     fun getResult(@PathVariable uuid: UUID, @PathVariable round: Int): ResponseEntity<MechanismResult> {
         val auctionWrapper = SessionManagement.get(uuid) ?: return ResponseEntity.notFound().build()
         val mechanismResult = try {

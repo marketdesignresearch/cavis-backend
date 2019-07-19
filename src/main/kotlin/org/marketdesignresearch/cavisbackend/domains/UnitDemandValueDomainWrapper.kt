@@ -18,8 +18,8 @@ data class UnitDemandValueDomainWrapper(val bidders: List<PerItemBidder>, val go
     init {
         if (goods.any { it.available() != 1 } ) {
             throw RuntimeException("The current implementation of the Unit Demand domain works only for " +
-                    "single-availability goods. It may not make sense to have this domain with different generic goods" +
-                    "anyway. If you're modelling identical goods, declare them as separate goods")
+                    "single-availability goods. It may not make sense to have this domain with different generic goods " +
+                    "anyway. If you're modelling identical goods, declare them as separate goods.")
         }
     }
 
@@ -39,4 +39,8 @@ data class UnitDemandValueDomainWrapper(val bidders: List<PerItemBidder>, val go
         }
         return SimpleXORDomain(xorBidders, goods)
     }
+
+    override fun getName() = "Unit Demand Value Domain"
+
+
 }
