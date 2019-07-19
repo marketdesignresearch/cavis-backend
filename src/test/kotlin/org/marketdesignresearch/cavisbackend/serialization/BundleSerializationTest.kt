@@ -9,6 +9,7 @@ import org.springframework.boot.test.autoconfigure.json.JsonTest
 import org.springframework.boot.test.json.JacksonTester
 import org.springframework.test.context.junit4.SpringRunner
 import org.assertj.core.api.Assertions.*
+import org.marketdesignresearch.cavisbackend.sha256Hex
 
 
 @Suppress("SpringJavaInjectionPointsAutowiringInspection")
@@ -24,9 +25,10 @@ class BundleSerializationTest {
         val itemA = SimpleGood("A")
         val itemB = SimpleGood("B")
         val bundle = Bundle.of(itemA, itemB)
+        val hash = bundle.sha256Hex()
         val serialized = json?.write(bundle)
 
-        assertThat(serialized?.json).isEqualTo("[{\"good\":\"${itemA.uuid}\",\"amount\":1},{\"good\":\"${itemB.uuid}\",\"amount\":1}]")
+        assertThat(serialized?.json).isEqualTo("{\"hash\":\"$hash\",\"entries\":[{\"good\":\"${itemA.uuid}\",\"amount\":1},{\"good\":\"${itemB.uuid}\",\"amount\":1}]}")
     }
 
 }

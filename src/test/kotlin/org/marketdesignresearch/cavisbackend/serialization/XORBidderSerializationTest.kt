@@ -22,7 +22,7 @@ class XORBidderSerializationTest {
     fun serialize() {
         val bidder = XORBidder("A")
         val serialized = json?.write(bidder)
-        assertThat(serialized?.json).isEqualTo("{\"id\":\"${bidder.id}\",\"name\":\"A\",\"value\":{\"bundleValues\":[]},\"description\":\"${bidder.description}\"}")
+        assertThat(serialized?.json).isEqualTo("{\"id\":\"${bidder.id}\",\"name\":\"A\",\"description\":\"${bidder.description}\"}")
     }
 
     @Test
