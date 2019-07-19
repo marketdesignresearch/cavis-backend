@@ -13,7 +13,10 @@ import java.math.BigDecimal
  * If one or more items are won, I have value X. If no item is won, I have value 0.
  * This is sub-additive, which is why we cannot use an OR domain.
  */
-data class UnitDemandValueDomainWrapper(val bidders: List<PerItemBidder>, val goods: List<SimpleGood>): DomainWrapper {
+data class UnitDemandValueDomainWrapper(
+        val bidders: List<PerItemBidder> = listOf(PerItemBidder("1"), PerItemBidder("2"), PerItemBidder("3")),
+        val goods: List<SimpleGood> = listOf(SimpleGood("A"), SimpleGood("B"))
+): DomainWrapper {
 
     init {
         if (goods.any { it.available() != 1 } ) {
@@ -23,7 +26,7 @@ data class UnitDemandValueDomainWrapper(val bidders: List<PerItemBidder>, val go
         }
     }
 
-    override fun toDomain(): Domain {
+    override fun toDomain(): SimpleXORDomain {
         val xorBidders = arrayListOf<XORBidder>()
         bidders.forEach { bidder ->
             val distribution = UniformIntegerDistribution(bidder.min, bidder.max)

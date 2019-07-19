@@ -8,8 +8,10 @@ import org.marketdesignresearch.mechlib.domain.SimpleGood
 import org.marketdesignresearch.mechlib.domain.bidder.Bidder
 import org.marketdesignresearch.mechlib.domain.price.LinearPrices
 import org.marketdesignresearch.mechlib.domain.price.Price
+import org.springframework.boot.test.context.SpringBootTest
 import java.math.BigDecimal
 
+@SpringBootTest
 class UnitDemandValueDomainTest {
 
    private val goodA = SimpleGood("A")

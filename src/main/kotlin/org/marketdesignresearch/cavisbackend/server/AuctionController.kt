@@ -21,7 +21,7 @@ import java.math.BigDecimal
 import java.util.*
 import kotlin.collections.HashSet
 
-data class AuctionSetting(val domain: DomainWrapper, val auctionType: AuctionFactory)
+data class AuctionSetting(val domain: DomainWrapper, val auctionType: AuctionFactory, val auctionConfig: AuctionConfiguration = AuctionConfiguration())
 data class JSONBid(val amount: BigDecimal, val bundle: Map<UUID, Int>)
 data class PerRoundRequest(val round: Int)
 data class JSONDemandQuery(val prices: Map<UUID, Double> = emptyMap(), val bidders: List<UUID> = emptyList(), val numberOfBundles: Int = 1)
@@ -34,7 +34,7 @@ class AuctionController {
 
     @PostMapping("/auctions", consumes = [MediaType.APPLICATION_JSON_VALUE])
     fun startAuction(@RequestBody body: AuctionSetting): ResponseEntity<AuctionWrapper> {
-        return ResponseEntity.of(Optional.of(SessionManagement.create(body.domain.toDomain(), body.auctionType)))
+        return ResponseEntity.of(Optional.of(SessionManagement.create(body.domain.toDomain(), body.auctionType, body.auctionConfig)))
     }
 
     @GetMapping("/auctions")

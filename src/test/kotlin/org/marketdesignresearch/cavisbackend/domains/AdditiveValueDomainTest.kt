@@ -9,8 +9,10 @@ import org.marketdesignresearch.mechlib.domain.bidder.Bidder
 import org.marketdesignresearch.mechlib.domain.price.LinearPrices
 import org.marketdesignresearch.mechlib.domain.price.Price
 import org.marketdesignresearch.mechlib.domain.price.Prices
+import org.springframework.boot.test.context.SpringBootTest
 import java.math.BigDecimal
 
+@SpringBootTest
 class AdditiveValueDomainTest {
 
     private val goodA = SimpleGood("A")

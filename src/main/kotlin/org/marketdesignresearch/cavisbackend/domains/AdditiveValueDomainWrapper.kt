@@ -10,9 +10,12 @@ import java.math.BigDecimal
 /**
  * One straight-forward implementation for an additive value domain is to use OR-values on the individual goods.
  */
-data class AdditiveValueDomainWrapper(val bidders: List<PerItemBidder>, val goods: List<SimpleGood>): DomainWrapper {
+data class AdditiveValueDomainWrapper(
+        val bidders: List<PerItemBidder> = listOf(PerItemBidder("1"), PerItemBidder("2"), PerItemBidder("3")),
+        val goods: List<SimpleGood> = listOf(SimpleGood("A"), SimpleGood("B"))
+) : DomainWrapper {
 
-    override fun toDomain(): Domain {
+    override fun toDomain(): SimpleORDomain {
         val orBidders = arrayListOf<ORBidder>()
         bidders.forEach { bidder ->
             val distribution = UniformIntegerDistribution(bidder.min, bidder.max)

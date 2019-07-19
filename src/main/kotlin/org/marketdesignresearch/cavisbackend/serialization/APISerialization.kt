@@ -82,6 +82,22 @@ class APISerialization {
         }
     }
 
+    class DomainJsonSerializer : JsonSerializer<Domain>() {
+
+        @Throws(IOException::class, JsonProcessingException::class)
+        override fun serialize(domain: Domain, jsonGenerator: JsonGenerator,
+                               serializerProvider: SerializerProvider) {
+
+            jsonGenerator.writeStartObject()
+            jsonGenerator.writeObjectField("bidders", domain.bidders)
+            jsonGenerator.writeObjectField("goods", domain.goods)
+            if (domain.hasEfficientAllocationCalculated()) {
+                jsonGenerator.writeObjectField("efficientAllocation", domain.efficientAllocation)
+            }
+            jsonGenerator.writeEndObject()
+        }
+    }
+
     class AuctionResultJsonSerializer : JsonSerializer<MechanismResult>() {
 
         @Throws(IOException::class, JsonProcessingException::class)
