@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.JsonSerializer
 import com.fasterxml.jackson.databind.SerializerProvider
+import org.marketdesignresearch.cavisbackend.sha256Hex
 import org.marketdesignresearch.mechlib.domain.Bundle
 import org.springframework.boot.jackson.JsonComponent
 import java.io.IOException
@@ -19,7 +20,7 @@ class BundleJsonSerialization {
                                serializerProvider: SerializerProvider) {
 
             jsonGenerator.writeStartObject()
-            jsonGenerator.writeNumberField("hash", bundle.hashCode())
+            jsonGenerator.writeStringField("hash", bundle.sha256Hex())
             jsonGenerator.writeArrayFieldStart("entries")
             for (entry in bundle.bundleEntries) {
                 jsonGenerator.writeStartObject()
