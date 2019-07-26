@@ -2,8 +2,11 @@ package org.marketdesignresearch.cavisbackend.domains
 
 import com.marcinmoskala.math.powerset
 import org.apache.commons.math3.distribution.UniformIntegerDistribution
-import org.marketdesignresearch.mechlib.domain.*
-import org.marketdesignresearch.mechlib.domain.bidder.XORBidder
+import org.marketdesignresearch.mechlib.domain.Bundle
+import org.marketdesignresearch.mechlib.domain.BundleEntry
+import org.marketdesignresearch.mechlib.domain.SimpleGood
+import org.marketdesignresearch.mechlib.domain.SimpleXORDomain
+import org.marketdesignresearch.mechlib.domain.bidder.UnitDemandBidder
 import org.marketdesignresearch.mechlib.domain.bidder.value.BundleValue
 import org.marketdesignresearch.mechlib.domain.bidder.value.XORValue
 import java.math.BigDecimal
@@ -27,7 +30,7 @@ data class UnitDemandValueDomainWrapper(
     }
 
     override fun toDomain(): SimpleXORDomain {
-        val xorBidders = arrayListOf<XORBidder>()
+        val unitDemandBidders = arrayListOf<UnitDemandBidder>()
         bidders.forEach { bidder ->
             val distribution = UniformIntegerDistribution(bidder.min, bidder.max)
             val amount = distribution.sample().toLong()
@@ -38,9 +41,9 @@ data class UnitDemandValueDomainWrapper(
                 val v = if (combination.isNotEmpty()) BigDecimal.valueOf(amount) else BigDecimal.ZERO
                 value.addBundleValue(BundleValue(v, bundle))
             }
-            xorBidders.add(XORBidder(bidder.name, value))
+            unitDemandBidders.add(UnitDemandBidder(bidder.name, value))
         }
-        return SimpleXORDomain(xorBidders, goods)
+        return SimpleXORDomain(unitDemandBidders, goods)
     }
 
     override fun getName() = "Unit Demand Value Domain"

@@ -1,8 +1,11 @@
 package org.marketdesignresearch.cavisbackend.domains
 
 import org.apache.commons.math3.distribution.UniformIntegerDistribution
-import org.marketdesignresearch.mechlib.domain.*
-import org.marketdesignresearch.mechlib.domain.bidder.ORBidder
+import org.marketdesignresearch.mechlib.domain.Bundle
+import org.marketdesignresearch.mechlib.domain.BundleEntry
+import org.marketdesignresearch.mechlib.domain.SimpleGood
+import org.marketdesignresearch.mechlib.domain.SimpleORDomain
+import org.marketdesignresearch.mechlib.domain.bidder.AdditiveValueBidder
 import org.marketdesignresearch.mechlib.domain.bidder.value.BundleValue
 import org.marketdesignresearch.mechlib.domain.bidder.value.ORValue
 import java.math.BigDecimal
@@ -16,7 +19,7 @@ data class AdditiveValueDomainWrapper(
 ) : DomainWrapper {
 
     override fun toDomain(): SimpleORDomain {
-        val orBidders = arrayListOf<ORBidder>()
+        val additiveBidders = arrayListOf<AdditiveValueBidder>()
         bidders.forEach { bidder ->
             val distribution = UniformIntegerDistribution(bidder.min, bidder.max)
             val value = ORValue()
@@ -27,9 +30,9 @@ data class AdditiveValueDomainWrapper(
                     value.addBundleValue(BundleValue(BigDecimal.valueOf(amount * i), bundle))
                 }
             }
-            orBidders.add(ORBidder(bidder.name, value))
+            additiveBidders.add(AdditiveValueBidder(bidder.name, value))
         }
-        return SimpleORDomain(orBidders, goods)
+        return SimpleORDomain(additiveBidders, goods)
     }
 
     override fun getName() = "Additive Value Domain"
