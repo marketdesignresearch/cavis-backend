@@ -122,6 +122,7 @@ class APISerialization {
             jsonGenerator.writeStringField("id", bidder.id.toString())
             jsonGenerator.writeStringField("name", bidder.name)
             jsonGenerator.writeStringField("description", bidder.description)
+            jsonGenerator.writeStringField("shortDescription", bidder.shortDescription)
             jsonGenerator.writeEndObject()
         }
     }
