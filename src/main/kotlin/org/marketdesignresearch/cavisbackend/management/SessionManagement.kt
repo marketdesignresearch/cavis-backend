@@ -7,7 +7,7 @@ import org.marketdesignresearch.mechlib.domain.Domain
 import java.util.*
 import kotlin.collections.HashMap
 
-data class AuctionWrapper(val id: UUID, val auction: Auction, val auctionType: AuctionFactory)
+data class AuctionWrapper(val id: UUID, val auction: Auction, val auctionType: AuctionFactory, val createdAt: Date = Date())
 
 object SessionManagement {
 

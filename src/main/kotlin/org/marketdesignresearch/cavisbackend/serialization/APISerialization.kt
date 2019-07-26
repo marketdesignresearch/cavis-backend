@@ -89,6 +89,7 @@ class APISerialization {
                                serializerProvider: SerializerProvider) {
 
             jsonGenerator.writeStartObject()
+            jsonGenerator.writeObjectField("type", domain::class.simpleName)
             jsonGenerator.writeObjectField("bidders", domain.bidders)
             jsonGenerator.writeObjectField("goods", domain.goods)
             if (domain.hasEfficientAllocationCalculated()) {
