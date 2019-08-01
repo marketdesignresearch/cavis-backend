@@ -1,13 +1,13 @@
 package org.marketdesignresearch.cavisbackend.domains
 
 import org.apache.commons.math3.distribution.UniformIntegerDistribution
-import org.marketdesignresearch.mechlib.domain.Bundle
-import org.marketdesignresearch.mechlib.domain.BundleEntry
-import org.marketdesignresearch.mechlib.domain.SimpleGood
-import org.marketdesignresearch.mechlib.domain.SimpleORDomain
-import org.marketdesignresearch.mechlib.domain.bidder.AdditiveValueBidder
-import org.marketdesignresearch.mechlib.domain.bidder.value.BundleValue
-import org.marketdesignresearch.mechlib.domain.bidder.value.ORValue
+import org.marketdesignresearch.mechlib.core.Bundle
+import org.marketdesignresearch.mechlib.core.BundleEntry
+import org.marketdesignresearch.mechlib.core.SimpleGood
+import org.marketdesignresearch.mechlib.core.SimpleORDomain
+import org.marketdesignresearch.mechlib.core.bidder.AdditiveValueBidder
+import org.marketdesignresearch.mechlib.core.bidder.valuefunction.BundleValue
+import org.marketdesignresearch.mechlib.core.bidder.valuefunction.ORValueFunction
 import java.math.BigDecimal
 
 /**
@@ -22,15 +22,15 @@ data class AdditiveValueDomainWrapper(
         val additiveBidders = arrayListOf<AdditiveValueBidder>()
         bidders.forEach { bidder ->
             val distribution = UniformIntegerDistribution(bidder.min, bidder.max)
-            val value = ORValue()
+            val bundleValues = hashSetOf<BundleValue>()
             goods.forEach {
                 val amount = distribution.sample().toLong()
-                for (i in 1..it.available()) {
+                for (i in 1..it.quantity) {
                     val bundle = Bundle(hashSetOf(BundleEntry(it, i)))
-                    value.addBundleValue(BundleValue(BigDecimal.valueOf(amount * i), bundle))
+                    bundleValues.add(BundleValue(BigDecimal.valueOf(amount * i), bundle))
                 }
             }
-            additiveBidders.add(AdditiveValueBidder(bidder.name, value))
+            additiveBidders.add(AdditiveValueBidder(bidder.name, ORValueFunction(bundleValues)))
         }
         return SimpleORDomain(additiveBidders, goods)
     }

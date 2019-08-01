@@ -2,8 +2,8 @@ package org.marketdesignresearch.cavisbackend.management
 
 import org.marketdesignresearch.cavisbackend.domains.AuctionFactory
 import org.marketdesignresearch.cavisbackend.server.AuctionConfiguration
-import org.marketdesignresearch.mechlib.auction.Auction
-import org.marketdesignresearch.mechlib.domain.Domain
+import org.marketdesignresearch.mechlib.mechanism.auctions.Auction
+import org.marketdesignresearch.mechlib.core.Domain
 import java.util.*
 import kotlin.collections.HashMap
 

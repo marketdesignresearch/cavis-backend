@@ -4,8 +4,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.marketdesignresearch.cavisbackend.sha256Hex
-import org.marketdesignresearch.mechlib.domain.Bundle
-import org.marketdesignresearch.mechlib.domain.SimpleGood
+import org.marketdesignresearch.mechlib.core.Bundle
+import org.marketdesignresearch.mechlib.core.SimpleGood
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.json.JsonTest
 import org.springframework.boot.test.json.JacksonTester

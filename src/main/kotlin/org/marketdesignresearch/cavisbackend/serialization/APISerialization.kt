@@ -12,17 +12,17 @@ import com.fasterxml.jackson.databind.node.BooleanNode
 import com.fasterxml.jackson.databind.node.IntNode
 import com.fasterxml.jackson.databind.node.TextNode
 import org.marketdesignresearch.cavisbackend.sha256Hex
-import org.marketdesignresearch.mechlib.auction.Auction
-import org.marketdesignresearch.mechlib.auction.cca.CCARound
-import org.marketdesignresearch.mechlib.auction.cca.CCAuction
-import org.marketdesignresearch.mechlib.auction.pvm.PVMAuction
-import org.marketdesignresearch.mechlib.auction.pvm.ml.InferredValueFunctions
-import org.marketdesignresearch.mechlib.domain.*
-import org.marketdesignresearch.mechlib.domain.bid.Bids
-import org.marketdesignresearch.mechlib.domain.bidder.Bidder
-import org.marketdesignresearch.mechlib.domain.bidder.value.Value
-import org.marketdesignresearch.mechlib.domain.price.LinearPrices
-import org.marketdesignresearch.mechlib.mechanisms.MechanismResult
+import org.marketdesignresearch.mechlib.mechanism.auctions.Auction
+import org.marketdesignresearch.mechlib.mechanism.auctions.cca.CCARound
+import org.marketdesignresearch.mechlib.mechanism.auctions.cca.CCAuction
+import org.marketdesignresearch.mechlib.mechanism.auctions.pvm.PVMAuction
+import org.marketdesignresearch.mechlib.mechanism.auctions.pvm.ml.InferredValueFunctions
+import org.marketdesignresearch.mechlib.core.*
+import org.marketdesignresearch.mechlib.core.bid.Bids
+import org.marketdesignresearch.mechlib.core.bidder.Bidder
+import org.marketdesignresearch.mechlib.core.bidder.valuefunction.ValueFunction
+import org.marketdesignresearch.mechlib.core.price.LinearPrices
+import org.marketdesignresearch.mechlib.core.Outcome
 import org.spectrumauctions.sats.core.model.gsvm.GSVMBidder
 import org.spectrumauctions.sats.core.model.gsvm.GSVMLicense
 import org.springframework.boot.jackson.JsonComponent
@@ -57,7 +57,7 @@ class APISerialization {
 
             jsonGenerator.writeStartObject()
             jsonGenerator.writeObjectField("domain", auction.domain) // TODO: Add keyword for domain
-            jsonGenerator.writeStringField("mechanismType", auction.mechanismType.mechanismName)
+            jsonGenerator.writeStringField("outcomeRule", auction.outcomeRuleType.name)
             jsonGenerator.writeObjectField("currentPrices", auction.currentPrices)
             jsonGenerator.writeBooleanField("finished", auction.finished())
             if (auction is CCAuction) {
@@ -99,10 +99,10 @@ class APISerialization {
         }
     }
 
-    class AuctionResultJsonSerializer : JsonSerializer<MechanismResult>() {
+    class AuctionResultJsonSerializer : JsonSerializer<Outcome>() {
 
         @Throws(IOException::class, JsonProcessingException::class)
-        override fun serialize(auctionResult: MechanismResult, jsonGenerator: JsonGenerator,
+        override fun serialize(auctionResult: Outcome, jsonGenerator: JsonGenerator,
                                serializerProvider: SerializerProvider) {
 
             jsonGenerator.writeStartObject()
@@ -196,7 +196,7 @@ class APISerialization {
             jsonGenerator.writeNumberField("longId", gsvmLicense.longId)
             jsonGenerator.writeNumberField("position", gsvmLicense.position)
             jsonGenerator.writeStringField("circle", if (gsvmLicense.world.nationalCircle.licenses.contains(gsvmLicense)) "national" else "regional")
-            jsonGenerator.writeNumberField("availability", gsvmLicense.available())
+            jsonGenerator.writeNumberField("quantity", gsvmLicense.quantity)
             jsonGenerator.writeEndObject()
         }
     }
@@ -235,7 +235,7 @@ class APISerialization {
             jsonGenerator.writeStartObject()
             jsonGenerator.writeStringField("name", good.name)
             jsonGenerator.writeStringField("id", good.uuid.toString())
-            jsonGenerator.writeNumberField("availability", good.available())
+            jsonGenerator.writeNumberField("quantity", good.quantity)
             jsonGenerator.writeEndObject()
         }
     }

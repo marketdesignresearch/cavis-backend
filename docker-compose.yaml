@@ -2,7 +2,11 @@ version: '3'
 
 services:
   api:
-    build: .
+    build:
+      context: .
+      args:
+        MECHLIB_BRANCH: feat-documentation-and-refactoring
+        SATS_BRANCH: feat-integrate-mechlib-after-mechlib-refactoring
     environment:
       CPLEX_STUDIO_DIR129: /opt/ibm/ILOG/CPLEX_Studio129
     ports:

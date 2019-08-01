@@ -2,12 +2,12 @@ package org.marketdesignresearch.cavisbackend.domains
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
-import org.marketdesignresearch.mechlib.domain.Bundle
-import org.marketdesignresearch.mechlib.domain.Good
-import org.marketdesignresearch.mechlib.domain.SimpleGood
-import org.marketdesignresearch.mechlib.domain.bidder.Bidder
-import org.marketdesignresearch.mechlib.domain.price.LinearPrices
-import org.marketdesignresearch.mechlib.domain.price.Price
+import org.marketdesignresearch.mechlib.core.Bundle
+import org.marketdesignresearch.mechlib.core.Good
+import org.marketdesignresearch.mechlib.core.SimpleGood
+import org.marketdesignresearch.mechlib.core.bidder.Bidder
+import org.marketdesignresearch.mechlib.core.price.LinearPrices
+import org.marketdesignresearch.mechlib.core.price.Price
 import org.springframework.boot.test.context.SpringBootTest
 import java.math.BigDecimal
 
@@ -26,7 +26,7 @@ class UnitDemandValueDomainTest {
    private val ABC = Bundle.of(goodA, goodB, goodC)
 
     @Test
-    fun `Should create valid Additive Value Domain`() {
+    fun `Should create valid Unit Demand Domain`() {
         val domain = UnitDemandValueDomainWrapper(
                 listOf(PerItemBidder("1", 10, 10),
                         PerItemBidder("2", 13, 13),
@@ -75,7 +75,7 @@ class UnitDemandValueDomainTest {
 
         val prices = LinearPrices(mapOf(goodA as Good to Price.of(value / 2.5), goodB as Good to Price.of(value / 2.5), goodC as Good to Price.of(value / 2.5)))
         assertThat(bidder.getBestBundles(prices, 5)).hasSize(5)
-        assertThat(bidder.getBestBundles(prices, 10)).containsExactlyInAnyOrder(A, B, C, AB, AC, BC)
+        assertThat(bidder.getBestBundles(prices, 10)).containsExactlyInAnyOrder(A, B, C, AB, AC, BC, Bundle.EMPTY)
         assertThat(bidder.getBestBundles(prices, 10, true)).containsExactlyInAnyOrder(A, B, C, AB, AC, BC, Bundle.EMPTY, ABC)
     }
 

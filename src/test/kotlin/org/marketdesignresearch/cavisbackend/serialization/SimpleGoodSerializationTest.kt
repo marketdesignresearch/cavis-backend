@@ -3,7 +3,7 @@ package org.marketdesignresearch.cavisbackend.serialization
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.marketdesignresearch.mechlib.domain.SimpleGood
+import org.marketdesignresearch.mechlib.core.SimpleGood
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.json.JsonTest
 import org.springframework.boot.test.json.JacksonTester
@@ -23,7 +23,7 @@ class SimpleGoodSerializationTest {
         val good = SimpleGood("A")
         val serialized = json?.write(good)
 
-        assertThat(serialized?.json).isEqualTo("{\"name\":\"A\",\"id\":\"${good.uuid}\",\"availability\":1}")
+        assertThat(serialized?.json).isEqualTo("{\"name\":\"A\",\"id\":\"${good.uuid}\",\"quantity\":1}")
     }
 
     @Test

@@ -1,18 +1,9 @@
 package org.marketdesignresearch.cavisbackend.domains
 
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.Test
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.TestFactory
-import org.marketdesignresearch.mechlib.domain.Bundle
-import org.marketdesignresearch.mechlib.domain.Domain
-import org.marketdesignresearch.mechlib.domain.Good
-import org.marketdesignresearch.mechlib.domain.SimpleGood
-import org.marketdesignresearch.mechlib.domain.bidder.Bidder
-import org.marketdesignresearch.mechlib.domain.price.LinearPrices
-import org.marketdesignresearch.mechlib.domain.price.Price
 import org.springframework.boot.test.context.SpringBootTest
-import java.math.BigDecimal
 import java.math.RoundingMode
 import java.util.stream.Stream
 

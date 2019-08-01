@@ -2,13 +2,13 @@ package org.marketdesignresearch.cavisbackend.domains
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
-import org.marketdesignresearch.mechlib.domain.Bundle
-import org.marketdesignresearch.mechlib.domain.Good
-import org.marketdesignresearch.mechlib.domain.SimpleGood
-import org.marketdesignresearch.mechlib.domain.bidder.Bidder
-import org.marketdesignresearch.mechlib.domain.price.LinearPrices
-import org.marketdesignresearch.mechlib.domain.price.Price
-import org.marketdesignresearch.mechlib.domain.price.Prices
+import org.marketdesignresearch.mechlib.core.Bundle
+import org.marketdesignresearch.mechlib.core.Good
+import org.marketdesignresearch.mechlib.core.SimpleGood
+import org.marketdesignresearch.mechlib.core.bidder.Bidder
+import org.marketdesignresearch.mechlib.core.price.LinearPrices
+import org.marketdesignresearch.mechlib.core.price.Price
+import org.marketdesignresearch.mechlib.core.price.Prices
 import org.springframework.boot.test.context.SpringBootTest
 import java.math.BigDecimal
 

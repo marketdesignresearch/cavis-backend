@@ -1,6 +1,5 @@
 package org.marketdesignresearch.cavisbackend.domains
 
-import org.marketdesignresearch.mechlib.domain.Domain
 import org.spectrumauctions.sats.core.model.gsvm.GlobalSynergyValueModel
 import org.spectrumauctions.sats.mechanism.domains.GSVMDomain
 

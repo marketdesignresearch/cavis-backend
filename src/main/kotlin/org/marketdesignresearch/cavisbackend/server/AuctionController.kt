@@ -4,16 +4,16 @@ import org.marketdesignresearch.cavisbackend.domains.AuctionFactory
 import org.marketdesignresearch.cavisbackend.domains.DomainWrapper
 import org.marketdesignresearch.cavisbackend.management.AuctionWrapper
 import org.marketdesignresearch.cavisbackend.management.SessionManagement
-import org.marketdesignresearch.mechlib.auction.IllegalBidException
-import org.marketdesignresearch.mechlib.domain.Bundle
-import org.marketdesignresearch.mechlib.domain.BundleBid
-import org.marketdesignresearch.mechlib.domain.BundleEntry
-import org.marketdesignresearch.mechlib.domain.Good
-import org.marketdesignresearch.mechlib.domain.bid.Bid
-import org.marketdesignresearch.mechlib.domain.bid.Bids
-import org.marketdesignresearch.mechlib.domain.price.LinearPrices
-import org.marketdesignresearch.mechlib.domain.price.Price
-import org.marketdesignresearch.mechlib.mechanisms.MechanismResult
+import org.marketdesignresearch.mechlib.mechanism.auctions.IllegalBidException
+import org.marketdesignresearch.mechlib.core.Bundle
+import org.marketdesignresearch.mechlib.core.BundleBid
+import org.marketdesignresearch.mechlib.core.BundleEntry
+import org.marketdesignresearch.mechlib.core.Good
+import org.marketdesignresearch.mechlib.core.bid.Bid
+import org.marketdesignresearch.mechlib.core.bid.Bids
+import org.marketdesignresearch.mechlib.core.price.LinearPrices
+import org.marketdesignresearch.mechlib.core.price.Price
+import org.marketdesignresearch.mechlib.core.Outcome
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -132,7 +132,7 @@ class AuctionController {
         auction.closeRound()
         // TODO: For now, we get result directly. I'll have to think about whether
         //  I should make this the default in the MechLib, as for most auctions the result will be quickly available
-        auction.getAuctionResultAtRound(auction.numberOfRounds - 1)
+        auction.getOutcomeAtRound(auction.numberOfRounds - 1)
         return ResponseEntity.ok(auctionWrapper)
     }
 
@@ -140,10 +140,10 @@ class AuctionController {
     fun advanceRound(@PathVariable uuid: UUID): ResponseEntity<AuctionWrapper> {
         val auctionWrapper = SessionManagement.get(uuid) ?: return ResponseEntity.notFound().build()
         val auction = auctionWrapper.auction
-        auction.nextRound()
+        auction.advanceRound()
         // TODO: For now, we get result directly. I'll have to think about whether
         //  I should make this the default in the MechLib, as for most auctions the result will be quickly available
-        auction.getAuctionResultAtRound(auction.numberOfRounds - 1)
+        auction.getOutcomeAtRound(auction.numberOfRounds - 1)
         return ResponseEntity.ok(auctionWrapper)
     }
 
@@ -151,13 +151,13 @@ class AuctionController {
     fun advancePhase(@PathVariable uuid: UUID): ResponseEntity<AuctionWrapper> {
         val auctionWrapper = SessionManagement.get(uuid) ?: return ResponseEntity.notFound().build()
         val auction = auctionWrapper.auction
-        if (auction.currentPhaseFinished()) auction.nextRound() // Step out of the "finished" round
+        if (auction.currentPhaseFinished()) auction.advanceRound() // Step out of the "finished" round
         while (!auction.currentPhaseFinished()) {
-            auction.nextRound()
+            auction.advanceRound()
         }
         // TODO: For now, we get result directly. I'll have to think about whether
         //  I should make this the default in the MechLib, as for most auctions the result will be quickly available
-        auction.getAuctionResultAtRound(auction.numberOfRounds - 1)
+        auction.getOutcomeAtRound(auction.numberOfRounds - 1)
         return ResponseEntity.ok(auctionWrapper)
     }
 
@@ -166,11 +166,11 @@ class AuctionController {
         val auctionWrapper = SessionManagement.get(uuid) ?: return ResponseEntity.notFound().build()
         val auction = auctionWrapper.auction
         while (!auction.finished()) {
-            auction.nextRound()
+            auction.advanceRound()
         }
         // TODO: For now, we get result directly. I'll have to think about whether
         //  I should make this the default in the MechLib, as for most auctions the result will be quickly available
-        auction.getAuctionResultAtRound(auction.numberOfRounds - 1)
+        auction.getOutcomeAtRound(auction.numberOfRounds - 1)
         return ResponseEntity.ok(auctionWrapper)
     }
 
@@ -187,16 +187,16 @@ class AuctionController {
     }
 
     @GetMapping("/auctions/{uuid}/result")
-    fun getResult(@PathVariable uuid: UUID): ResponseEntity<MechanismResult> {
+    fun getResult(@PathVariable uuid: UUID): ResponseEntity<Outcome> {
         val auctionWrapper = SessionManagement.get(uuid) ?: return ResponseEntity.notFound().build()
-        return ResponseEntity.ok(auctionWrapper.auction.mechanismResult)
+        return ResponseEntity.ok(auctionWrapper.auction.outcome)
     }
 
     @GetMapping("/auctions/{uuid}/rounds/{round}/result")
-    fun getResult(@PathVariable uuid: UUID, @PathVariable round: Int): ResponseEntity<MechanismResult> {
+    fun getResult(@PathVariable uuid: UUID, @PathVariable round: Int): ResponseEntity<Outcome> {
         val auctionWrapper = SessionManagement.get(uuid) ?: return ResponseEntity.notFound().build()
         val mechanismResult = try {
-            auctionWrapper.auction.getAuctionResultAtRound(round)
+            auctionWrapper.auction.getOutcomeAtRound(round)
         } catch (e: IllegalArgumentException) {
             return ResponseEntity.badRequest().build()
         }

@@ -81,17 +81,17 @@ class VCGAPITests {
                 .andDo { logger.info("Request: {} | Response: {}", it.request.contentAsString, it.response.contentAsString) }
                 .andExpect(status().isOk)
                 .andExpect(jsonPath("$.id").value(id))
-                .andExpect(jsonPath("$.auction.rounds[0].mechanismResult.allocation.$b1Id.value").value(10))
-                .andExpect(jsonPath("$.auction.rounds[0].mechanismResult.allocation.$b1Id.bundle.hash").isString)
-                .andExpect(jsonPath("$.auction.rounds[0].mechanismResult.allocation.$b1Id.bundle.entries[0].good").value(AId))
-                .andExpect(jsonPath("$.auction.rounds[0].mechanismResult.allocation.$b1Id.bundle.entries[0].amount").value(1))
-                .andExpect(jsonPath("$.auction.rounds[0].mechanismResult.allocation.$b2Id.value").value(10))
-                .andExpect(jsonPath("$.auction.rounds[0].mechanismResult.allocation.$b2Id.bundle.hash").isString)
-                .andExpect(jsonPath("$.auction.rounds[0].mechanismResult.allocation.$b2Id.bundle.entries[0].good").value(BId))
-                .andExpect(jsonPath("$.auction.rounds[0].mechanismResult.allocation.$b2Id.bundle.entries[0].amount").value(1))
-                .andExpect(jsonPath("$.auction.rounds[0].mechanismResult.payments.totalPayments").value(4))
-                .andExpect(jsonPath("$.auction.rounds[0].mechanismResult.payments.$b1Id").value(2))
-                .andExpect(jsonPath("$.auction.rounds[0].mechanismResult.payments.$b2Id").value(2))
+                .andExpect(jsonPath("$.auction.rounds[0].outcome.allocation.$b1Id.value").value(10))
+                .andExpect(jsonPath("$.auction.rounds[0].outcome.allocation.$b1Id.bundle.hash").isString)
+                .andExpect(jsonPath("$.auction.rounds[0].outcome.allocation.$b1Id.bundle.entries[0].good").value(AId))
+                .andExpect(jsonPath("$.auction.rounds[0].outcome.allocation.$b1Id.bundle.entries[0].amount").value(1))
+                .andExpect(jsonPath("$.auction.rounds[0].outcome.allocation.$b2Id.value").value(10))
+                .andExpect(jsonPath("$.auction.rounds[0].outcome.allocation.$b2Id.bundle.hash").isString)
+                .andExpect(jsonPath("$.auction.rounds[0].outcome.allocation.$b2Id.bundle.entries[0].good").value(BId))
+                .andExpect(jsonPath("$.auction.rounds[0].outcome.allocation.$b2Id.bundle.entries[0].amount").value(1))
+                .andExpect(jsonPath("$.auction.rounds[0].outcome.payments.totalPayments").value(4))
+                .andExpect(jsonPath("$.auction.rounds[0].outcome.payments.$b1Id").value(2))
+                .andExpect(jsonPath("$.auction.rounds[0].outcome.payments.$b2Id").value(2))
     }
 
     @Test
@@ -116,11 +116,11 @@ class VCGAPITests {
                 .andDo { logger.info("Request: {} | Response: {}", it.request.contentAsString, it.response.contentAsString) }
                 .andExpect(status().isOk)
                 .andExpect(jsonPath("$.id").value(id))
-                .andExpect(jsonPath("$.auction.rounds[0].mechanismResult.allocation.$b2Id.value").value(4))
-                .andExpect(jsonPath("$.auction.rounds[0].mechanismResult.allocation.$b3Id.value").value(5))
-                .andExpect(jsonPath("$.auction.rounds[0].mechanismResult.payments.totalPayments").value(6))
-                .andExpect(jsonPath("$.auction.rounds[0].mechanismResult.payments.$b2Id").value(3))
-                .andExpect(jsonPath("$.auction.rounds[0].mechanismResult.payments.$b3Id").value(3))
+                .andExpect(jsonPath("$.auction.rounds[0].outcome.allocation.$b2Id.value").value(4))
+                .andExpect(jsonPath("$.auction.rounds[0].outcome.allocation.$b3Id.value").value(5))
+                .andExpect(jsonPath("$.auction.rounds[0].outcome.payments.totalPayments").value(6))
+                .andExpect(jsonPath("$.auction.rounds[0].outcome.payments.$b2Id").value(3))
+                .andExpect(jsonPath("$.auction.rounds[0].outcome.payments.$b3Id").value(3))
                 .andExpect(jsonPath("$.auction.rounds[1]").doesNotExist())
     }
 

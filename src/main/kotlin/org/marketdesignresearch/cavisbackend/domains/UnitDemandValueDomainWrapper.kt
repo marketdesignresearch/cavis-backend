@@ -1,15 +1,9 @@
 package org.marketdesignresearch.cavisbackend.domains
 
-import com.marcinmoskala.math.powerset
 import org.apache.commons.math3.distribution.UniformIntegerDistribution
-import org.marketdesignresearch.mechlib.domain.Bundle
-import org.marketdesignresearch.mechlib.domain.BundleEntry
-import org.marketdesignresearch.mechlib.domain.SimpleGood
-import org.marketdesignresearch.mechlib.domain.SimpleXORDomain
-import org.marketdesignresearch.mechlib.domain.bidder.UnitDemandBidder
-import org.marketdesignresearch.mechlib.domain.bidder.value.BundleValue
-import org.marketdesignresearch.mechlib.domain.bidder.value.XORValue
-import java.math.BigDecimal
+import org.marketdesignresearch.mechlib.core.SimpleGood
+import org.marketdesignresearch.mechlib.core.SimpleUnitDemandDomain
+import org.marketdesignresearch.mechlib.core.bidder.UnitDemandBidder
 
 /**
  * The strict definition of a unit demand value is the following:
@@ -22,28 +16,21 @@ data class UnitDemandValueDomainWrapper(
 ): DomainWrapper {
 
     init {
-        if (goods.any { it.available() != 1 } ) {
+        if (goods.any { it.quantity != 1 } ) {
             throw RuntimeException("The current implementation of the Unit Demand domain works only for " +
                     "single-availability goods. It may not make sense to have this domain with different generic goods " +
                     "anyway. If you're modelling identical goods, declare them as separate goods.")
         }
     }
 
-    override fun toDomain(): SimpleXORDomain {
+    override fun toDomain(): SimpleUnitDemandDomain {
         val unitDemandBidders = arrayListOf<UnitDemandBidder>()
         bidders.forEach { bidder ->
             val distribution = UniformIntegerDistribution(bidder.min, bidder.max)
-            val amount = distribution.sample().toLong()
-            val value = XORValue()
-            for (combination in goods.powerset()) {
-                val bundleEntries = combination.map { g -> BundleEntry(g, 1) }.toSet()
-                val bundle = Bundle(bundleEntries)
-                val v = if (combination.isNotEmpty()) BigDecimal.valueOf(amount) else BigDecimal.ZERO
-                value.addBundleValue(BundleValue(v, bundle))
-            }
-            unitDemandBidders.add(UnitDemandBidder(bidder.name, value))
+            val value = distribution.sample().toBigDecimal()
+            unitDemandBidders.add(UnitDemandBidder(bidder.name, value, goods))
         }
-        return SimpleXORDomain(unitDemandBidders, goods)
+        return SimpleUnitDemandDomain(unitDemandBidders, goods)
     }
 
     override fun getName() = "Unit Demand Value Domain"

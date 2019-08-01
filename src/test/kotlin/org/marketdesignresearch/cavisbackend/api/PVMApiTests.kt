@@ -17,7 +17,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPat
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.assertj.core.api.Assertions.*
 import org.marketdesignresearch.cavisbackend.server.JSONBid
-import org.marketdesignresearch.mechlib.auction.cca.CCARound
+import org.marketdesignresearch.mechlib.mechanism.auctions.cca.CCARound
 import java.util.*
 import kotlin.collections.HashMap
 
@@ -106,17 +106,17 @@ class PVMApiTests {
                 .andExpect(jsonPath("$.auction.domain.goods[0]").exists())
                 .andExpect(jsonPath("$.auction.domain.goods[0].id").value(item1Id!!))
                 .andExpect(jsonPath("$.auction.domain.goods[0].name").value("A"))
-                .andExpect(jsonPath("$.auction.domain.goods[0].availability").value(1))
+                .andExpect(jsonPath("$.auction.domain.goods[0].quantity").value(1))
                 .andExpect(jsonPath("$.auction.domain.goods[1]").exists())
                 .andExpect(jsonPath("$.auction.domain.goods[1].id").value(item2Id!!))
                 .andExpect(jsonPath("$.auction.domain.goods[1].name").value("B"))
-                .andExpect(jsonPath("$.auction.domain.goods[1].availability").value(1))
+                .andExpect(jsonPath("$.auction.domain.goods[1].quantity").value(1))
                 .andExpect(jsonPath("$.auction.domain.goods[2].id").value(item3Id!!))
                 .andExpect(jsonPath("$.auction.domain.goods[2].name").value("C"))
-                .andExpect(jsonPath("$.auction.domain.goods[2].availability").value(1))
+                .andExpect(jsonPath("$.auction.domain.goods[2].quantity").value(1))
                 .andExpect(jsonPath("$.auction.domain.goods[3].id").value(item4Id!!))
                 .andExpect(jsonPath("$.auction.domain.goods[3].name").value("D"))
-                .andExpect(jsonPath("$.auction.domain.goods[3].availability").value(1))
+                .andExpect(jsonPath("$.auction.domain.goods[3].quantity").value(1))
                 .andExpect(jsonPath("$.auction.rounds").isArray)
                 .andExpect(jsonPath("$.auction.rounds").isEmpty)
                 .andExpect(jsonPath("$.auction.restrictedBids").exists())

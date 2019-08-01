@@ -1,6 +1,5 @@
 package org.marketdesignresearch.cavisbackend.domains
 
-import org.marketdesignresearch.mechlib.domain.Domain
 import org.spectrumauctions.sats.core.model.mrvm.MultiRegionModel
 import org.spectrumauctions.sats.mechanism.domains.MRVMDomain
 
