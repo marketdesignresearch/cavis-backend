@@ -1,4 +1,4 @@
-package org.marketdesignresearch.cavisbackend.server
+package org.marketdesignresearch.cavisbackend.api
 
 data class CCAConfiguration(
         val supplementaryBids: Int = 10,

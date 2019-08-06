@@ -1,9 +1,11 @@
-package org.marketdesignresearch.cavisbackend.server
+package org.marketdesignresearch.cavisbackend.api
 
 import org.marketdesignresearch.cavisbackend.domains.AuctionFactory
 import org.marketdesignresearch.cavisbackend.domains.DomainWrapper
-import org.marketdesignresearch.cavisbackend.management.AuctionWrapper
-import org.marketdesignresearch.cavisbackend.management.SessionManagement
+import org.marketdesignresearch.cavisbackend.mongo.AuctionWrapper
+import org.marketdesignresearch.cavisbackend.mongo.AuctionWrapperDAO
+import org.marketdesignresearch.cavisbackend.SessionManagement
+import org.marketdesignresearch.cavisbackend.toNullable
 import org.marketdesignresearch.mechlib.mechanism.auctions.IllegalBidException
 import org.marketdesignresearch.mechlib.core.Bundle
 import org.marketdesignresearch.mechlib.core.BundleBid
@@ -14,6 +16,7 @@ import org.marketdesignresearch.mechlib.core.bid.Bids
 import org.marketdesignresearch.mechlib.core.price.LinearPrices
 import org.marketdesignresearch.mechlib.core.price.Price
 import org.marketdesignresearch.mechlib.core.Outcome
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -30,11 +33,13 @@ data class JSONValueQueryResponse(val value: BigDecimal, val bundle: Bundle)
 
 @CrossOrigin(origins = ["*"])
 @RestController
-class AuctionController {
+class AuctionController(private val auctionWrapperDAO: AuctionWrapperDAO) {
 
     @PostMapping("/auctions", consumes = [MediaType.APPLICATION_JSON_VALUE])
     fun startAuction(@RequestBody body: AuctionSetting): ResponseEntity<AuctionWrapper> {
-        return ResponseEntity.of(Optional.of(SessionManagement.create(body.domain.toDomain(), body.auctionType, body.auctionConfig)))
+        val auctionWrapper = SessionManagement.create(body.domain.toDomain(), body.auctionType, body.auctionConfig)
+        auctionWrapperDAO.save(auctionWrapper)
+        return ResponseEntity.ok(auctionWrapper)
     }
 
     @GetMapping("/auctions")
@@ -43,14 +48,20 @@ class AuctionController {
     }
 
     @GetMapping("/auctions/{uuid}")
-    fun getAuction(@PathVariable uuid: UUID): ResponseEntity<AuctionWrapper> {
-        return ResponseEntity.of(Optional.ofNullable(SessionManagement.get(uuid)))
+    fun getAuction(@PathVariable uuid: UUID): ResponseEntity<AuctionWrapper?> {
+        val auctionWrapper = SessionManagement.get(uuid) ?: run {
+            val inDB = auctionWrapperDAO.findByIdOrNull(uuid)
+            if (inDB != null) SessionManagement.load(inDB)
+            inDB
+        }
+        return ResponseEntity.of(Optional.ofNullable(auctionWrapper))
     }
 
     @DeleteMapping("/auctions/{uuid}")
     fun deleteAuction(@PathVariable uuid: UUID): ResponseEntity<Any> {
         val success = SessionManagement.delete(uuid)
-        if (!success) return ResponseEntity.notFound().build()
+        if (!success && !auctionWrapperDAO.findById(uuid).isPresent) return ResponseEntity.notFound().build()
+        auctionWrapperDAO.deleteById(uuid)
         return ResponseEntity.noContent().build()
     }
 
@@ -111,6 +122,7 @@ class AuctionController {
         } catch (e: IllegalBidException) {
             return ResponseEntity.badRequest().body(e.message)
         }
+        auctionWrapperDAO.save(auctionWrapper)
         return ResponseEntity.ok(auctionWrapper)
     }
 
@@ -122,6 +134,7 @@ class AuctionController {
         if (uuids.isEmpty()) uuids.addAll(auction.domain.bidders.map { it.id })
         val bids = Bids()
         uuids.forEach { bids.setBid(auction.getBidder(it), auction.proposeBid(auction.getBidder(it))) }
+        // auctionWrapperDAO.save(auctionWrapper)
         return ResponseEntity.ok(bids)
     }
 
@@ -133,6 +146,7 @@ class AuctionController {
         // TODO: For now, we get result directly. I'll have to think about whether
         //  I should make this the default in the MechLib, as for most auctions the result will be quickly available
         auction.getOutcomeAtRound(auction.numberOfRounds - 1)
+        auctionWrapperDAO.save(auctionWrapper)
         return ResponseEntity.ok(auctionWrapper)
     }
 
@@ -144,6 +158,7 @@ class AuctionController {
         // TODO: For now, we get result directly. I'll have to think about whether
         //  I should make this the default in the MechLib, as for most auctions the result will be quickly available
         auction.getOutcomeAtRound(auction.numberOfRounds - 1)
+        auctionWrapperDAO.save(auctionWrapper)
         return ResponseEntity.ok(auctionWrapper)
     }
 
@@ -158,6 +173,7 @@ class AuctionController {
         // TODO: For now, we get result directly. I'll have to think about whether
         //  I should make this the default in the MechLib, as for most auctions the result will be quickly available
         auction.getOutcomeAtRound(auction.numberOfRounds - 1)
+        auctionWrapperDAO.save(auctionWrapper)
         return ResponseEntity.ok(auctionWrapper)
     }
 
@@ -171,6 +187,7 @@ class AuctionController {
         // TODO: For now, we get result directly. I'll have to think about whether
         //  I should make this the default in the MechLib, as for most auctions the result will be quickly available
         auction.getOutcomeAtRound(auction.numberOfRounds - 1)
+        auctionWrapperDAO.save(auctionWrapper)
         return ResponseEntity.ok(auctionWrapper)
     }
 
@@ -180,6 +197,7 @@ class AuctionController {
         return try {
             val bids = auctionWrapper.auction.getBidsAt(body.round)
             auctionWrapper.auction.resetToRound(body.round)
+            auctionWrapperDAO.save(auctionWrapper)
             ResponseEntity.ok(bids)
         } catch (e: IllegalArgumentException) {
             ResponseEntity.badRequest().build()
@@ -189,7 +207,9 @@ class AuctionController {
     @GetMapping("/auctions/{uuid}/result")
     fun getResult(@PathVariable uuid: UUID): ResponseEntity<Outcome> {
         val auctionWrapper = SessionManagement.get(uuid) ?: return ResponseEntity.notFound().build()
-        return ResponseEntity.ok(auctionWrapper.auction.outcome)
+        val outcome = auctionWrapper.auction.outcome
+        auctionWrapperDAO.save(auctionWrapper)
+        return ResponseEntity.ok(outcome)
     }
 
     @GetMapping("/auctions/{uuid}/rounds/{round}/result")
@@ -200,6 +220,7 @@ class AuctionController {
         } catch (e: IllegalArgumentException) {
             return ResponseEntity.badRequest().build()
         }
+        auctionWrapperDAO.save(auctionWrapper)
         return ResponseEntity.ok(mechanismResult)
     }
 }

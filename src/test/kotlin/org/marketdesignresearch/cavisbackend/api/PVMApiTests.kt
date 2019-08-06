@@ -2,7 +2,6 @@ package org.marketdesignresearch.cavisbackend.api
 
 import org.json.JSONArray
 import org.json.JSONObject
-import org.junit.BeforeClass
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.slf4j.LoggerFactory
@@ -16,10 +15,6 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.assertj.core.api.Assertions.*
-import org.marketdesignresearch.cavisbackend.server.JSONBid
-import org.marketdesignresearch.mechlib.mechanism.auctions.cca.CCARound
-import java.util.*
-import kotlin.collections.HashMap
 
 @RunWith(SpringRunner::class)
 @SpringBootTest

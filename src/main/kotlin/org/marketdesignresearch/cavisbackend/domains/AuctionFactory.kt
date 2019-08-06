@@ -1,6 +1,6 @@
 package org.marketdesignresearch.cavisbackend.domains
 
-import org.marketdesignresearch.cavisbackend.server.AuctionConfiguration
+import org.marketdesignresearch.cavisbackend.api.AuctionConfiguration
 import org.marketdesignresearch.mechlib.core.Domain
 import org.marketdesignresearch.mechlib.core.Good
 import org.marketdesignresearch.mechlib.core.price.LinearPrices
