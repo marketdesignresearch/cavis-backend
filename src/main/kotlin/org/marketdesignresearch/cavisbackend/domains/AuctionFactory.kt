@@ -46,7 +46,7 @@ enum class AuctionFactory {
                     cca = CCAuction(domain, OutcomeRuleGenerator.VCG_XOR, config.useProposedReservePrices)
                 }
                 cca.setPriceUpdater(SimpleRelativePriceUpdate().withPriceUpdate(BigDecimal.valueOf(config.ccaConfig.priceUpdate)))
-                cca.addSupplementaryRound(ProfitMaximizingSupplementaryRound(cca).withNumberOfSupplementaryBids(config.ccaConfig.supplementaryBids))
+                cca.addSupplementaryRound(ProfitMaximizingSupplementaryRound().withNumberOfSupplementaryBids(config.ccaConfig.supplementaryBids))
                 return cca
             }
             CCA_CCG -> {
@@ -59,7 +59,7 @@ enum class AuctionFactory {
                     cca = CCAuction(domain, OutcomeRuleGenerator.CCG, config.useProposedReservePrices)
                 }
                 cca.setPriceUpdater(SimpleRelativePriceUpdate().withPriceUpdate(BigDecimal.valueOf(config.ccaConfig.priceUpdate)))
-                cca.addSupplementaryRound(ProfitMaximizingSupplementaryRound(cca).withNumberOfSupplementaryBids(config.ccaConfig.supplementaryBids))
+                cca.addSupplementaryRound(ProfitMaximizingSupplementaryRound().withNumberOfSupplementaryBids(config.ccaConfig.supplementaryBids))
                 return cca
             }
             PVM_VCG -> PVMAuction(domain, OutcomeRuleGenerator.VCG_XOR, config.pvmConfig.initialRoundBids)

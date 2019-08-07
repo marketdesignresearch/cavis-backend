@@ -1,6 +1,7 @@
 package org.marketdesignresearch.cavisbackend
 
 import org.apache.commons.codec.digest.DigestUtils
+import org.marketdesignresearch.mechlib.core.Allocation
 import org.marketdesignresearch.mechlib.core.Bundle
 import java.util.*
 
@@ -12,4 +13,4 @@ fun Bundle.sha256Hex(): String {
     )
 }
 
-fun <T : Any> Optional<T>.toNullable(): T? = this.orElse(null);
+fun <T : Any> Optional<T>.toNullable(): T? = this.orElse(null)

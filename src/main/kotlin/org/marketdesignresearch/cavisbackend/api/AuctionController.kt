@@ -49,19 +49,20 @@ class AuctionController(private val auctionWrapperDAO: AuctionWrapperDAO) {
 
     @GetMapping("/auctions/{uuid}")
     fun getAuction(@PathVariable uuid: UUID): ResponseEntity<AuctionWrapper?> {
-        val auctionWrapper = SessionManagement.get(uuid) ?: run {
+        val auctionWrapper = SessionManagement.get(uuid)/* ?: run {
             val inDB = auctionWrapperDAO.findByIdOrNull(uuid)
             if (inDB != null) SessionManagement.load(inDB)
             inDB
-        }
+        }*/
         return ResponseEntity.of(Optional.ofNullable(auctionWrapper))
     }
 
     @DeleteMapping("/auctions/{uuid}")
     fun deleteAuction(@PathVariable uuid: UUID): ResponseEntity<Any> {
         val success = SessionManagement.delete(uuid)
-        if (!success && !auctionWrapperDAO.findById(uuid).isPresent) return ResponseEntity.notFound().build()
-        auctionWrapperDAO.deleteById(uuid)
+        if (!success) return ResponseEntity.notFound().build()
+        //if (!success && !auctionWrapperDAO.findById(uuid).isPresent) return ResponseEntity.notFound().build()
+        //auctionWrapperDAO.deleteById(uuid)
         return ResponseEntity.noContent().build()
     }
 
@@ -134,7 +135,7 @@ class AuctionController(private val auctionWrapperDAO: AuctionWrapperDAO) {
         if (uuids.isEmpty()) uuids.addAll(auction.domain.bidders.map { it.id })
         val bids = Bids()
         uuids.forEach { bids.setBid(auction.getBidder(it), auction.proposeBid(auction.getBidder(it))) }
-        // auctionWrapperDAO.save(auctionWrapper)
+        auctionWrapperDAO.save(auctionWrapper)
         return ResponseEntity.ok(bids)
     }
 

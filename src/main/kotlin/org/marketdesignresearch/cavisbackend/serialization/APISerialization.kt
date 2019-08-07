@@ -208,7 +208,7 @@ class APISerialization {
                                serializerProvider: SerializerProvider) {
 
             jsonGenerator.writeStartObject()
-            linearPrices.entrySet().forEach { jsonGenerator.writeObjectField(it.key.uuid.toString(), it.value.amount) }
+            linearPrices.priceMap.forEach { jsonGenerator.writeObjectField(it.key.uuid.toString(), it.value.amount) }
             jsonGenerator.writeEndObject()
         }
     }
@@ -260,7 +260,7 @@ class APISerialization {
                                serializerProvider: SerializerProvider) {
 
             jsonGenerator.writeStartObject()
-            valueFunctions.forEach { jsonGenerator.writeObjectField(it.key.id.toString(), it.value) }
+            valueFunctions.map.forEach { jsonGenerator.writeObjectField(it.key.toString(), it.value) }
             jsonGenerator.writeEndObject()
         }
     }

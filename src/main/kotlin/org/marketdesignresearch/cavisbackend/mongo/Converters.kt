@@ -1,7 +1,9 @@
 package org.marketdesignresearch.cavisbackend.mongo
 
 
-import org.bson.Document
+import org.bson.*
+import org.bson.codecs.EncoderContext
+import org.bson.conversions.Bson
 import org.marketdesignresearch.mechlib.core.Allocation
 import org.marketdesignresearch.mechlib.core.BidderAllocation
 import org.marketdesignresearch.mechlib.core.BidderPayment
@@ -9,76 +11,46 @@ import org.marketdesignresearch.mechlib.core.Payment
 import org.marketdesignresearch.mechlib.core.bid.Bid
 import org.marketdesignresearch.mechlib.core.bid.Bids
 import org.marketdesignresearch.mechlib.core.bidder.Bidder
+import org.marketdesignresearch.mechlib.mechanism.auctions.cca.CCAuction
 import org.marketdesignresearch.mechlib.metainfo.MetaInfo
+import org.spectrumauctions.sats.core.model.SATSGood
+import org.spectrumauctions.sats.core.model.gsvm.GSVMBidder
+import org.spectrumauctions.sats.core.model.gsvm.GSVMLicense
+import org.spectrumauctions.sats.core.model.gsvm.GSVMWorld
+import org.spectrumauctions.sats.core.util.file.gson.GsonWrapper
+import org.spectrumauctions.sats.core.util.instancehandling.JSONInstanceHandler
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.core.convert.converter.Converter
+import org.springframework.core.convert.support.DefaultConversionService
+import org.springframework.data.mongodb.core.MongoTemplate
+import org.springframework.stereotype.Component
 import java.util.*
 import kotlin.collections.HashMap
+import org.springframework.core.convert.ConversionService
+import kotlin.NoSuchElementException
 
-class AllocationConverter : Converter<Allocation, Document> {
-    override fun convert(source: Allocation): Document {
+class GSVMLicenseToDocumentConverter : Converter<GSVMLicense, Document> {
+    override fun convert(source: GSVMLicense): Document {
         val document = Document()
-        document["totalAllocationValue"] = source.totalAllocationValue
-        document["bids"] = BidsConverter().convert(source.bids)
-        document["metaInfo"] = MetaInfoConverter().convert(source.metaInfo)
-        document["coalitions"] = source.potentialCoalitions
-        val bidderMap = HashMap<String, Bidder>()
-        val tradesMap = HashMap<String, BidderAllocation>()
-        source.tradesMap.forEach { (bidder, bidderAllocation) ->
-            bidderMap[bidder.id.toString()] = bidder
-            tradesMap[bidder.id.toString()] = bidderAllocation
-        }
-        document["bidderMap"] = bidderMap
-        document["tradesMap"] = tradesMap
+        document["world"] = GsonWrapper.getInstance().toJson(source.world)
+        document["name"] = source.name
         return document
     }
 }
 
-class PaymentConverter : Converter<Payment, Document> {
-    override fun convert(source: Payment): Document {
-        val document = Document()
-        document["metaInfo"] = MetaInfoConverter().convert(source.metaInfo)
-        val bidderMap = HashMap<String, Bidder>()
-        val tradesMap = HashMap<String, BidderPayment>()
-        source.paymentMap.forEach { (bidder, bidderPayment) ->
-            bidderMap[bidder.id.toString()] = bidder
-            tradesMap[bidder.id.toString()] = bidderPayment
-        }
-        document["bidderMap"] = bidderMap
-        document["paymentMap"] = tradesMap
-        return document
+class DocumentToGSVMLicenseConverter : Converter<Document, GSVMLicense> {
+    override fun convert(source: Document): GSVMLicense {
+        val world = GsonWrapper.getInstance().fromJson(GSVMWorld::class.java, source["world"] as String)
+        val name = source["name"] as String
+        return world.licenses.find { it.name == name } ?: throw NoSuchElementException("No license with name $name found.")
     }
 }
 
-class BidsConverter : Converter<Bids, Document> {
-    override fun convert(source: Bids): Document {
+class GSVMBidderToDocumentConverter : Converter<GSVMBidder, Document> {
+    override fun convert(source: GSVMBidder): Document {
         val document = Document()
-        val bidderMap = HashMap<String, Bidder>()
-        val bidMap = HashMap<String, Bid>()
-        source.bidMap.forEach { (bidder, bid) ->
-            bidderMap[bidder.id.toString()] = bidder // FIXME: Don't assign directly, let it convert by registry
-            bidMap[bidder.id.toString()] = bid
-        }
-        document["bidderMap"] = bidderMap
-        document["bidMap"] = bidMap
+        document["world"] = GsonWrapper.getInstance().toJson(source.world)
+        document["name"] = source.name
         return document
     }
 }
-
-class MetaInfoConverter : Converter<MetaInfo, Document> {
-    override fun convert(source: MetaInfo): Document {
-        val document = Document()
-        document["javaRuntime"] = source.javaRuntime
-        document["mipSolveTime"] = source.mipSolveTime
-        document["lpSolveTime"] = source.lpSolveTime
-        document["qpSolveTime"] = source.qpSolveTime
-        document["approxSolveTime"] = source.approxSolveTime
-        document["numberOfLPs"] = source.numberOfLPs
-        document["numberOfQPs"] = source.numberOfQPs
-        document["numberOfApproximations"] = source.numberOfApproximations
-        document["numberOfMIPs"] = source.numberOfMIPs
-        document["constraintsGenerated"] = source.constraintsGenerated
-        document["ignoredConstraints"] = source.ignoredConstraints
-        return document
-    }
-}
-
