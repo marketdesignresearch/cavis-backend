@@ -57,7 +57,7 @@ class APISerialization {
 
             jsonGenerator.writeStartObject()
             jsonGenerator.writeObjectField("domain", auction.domain) // TODO: Add keyword for domain
-            jsonGenerator.writeStringField("outcomeRule", auction.outcomeRuleType.name)
+            jsonGenerator.writeStringField("outcomeRule", auction.outcomeRuleGenerator.name)
             jsonGenerator.writeObjectField("currentPrices", auction.currentPrices)
             jsonGenerator.writeBooleanField("finished", auction.finished())
             if (auction is CCAuction) {
