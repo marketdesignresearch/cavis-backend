@@ -5,7 +5,6 @@ import org.marketdesignresearch.cavisbackend.domains.DomainWrapper
 import org.marketdesignresearch.cavisbackend.mongo.AuctionWrapper
 import org.marketdesignresearch.cavisbackend.mongo.AuctionWrapperDAO
 import org.marketdesignresearch.cavisbackend.SessionManagement
-import org.marketdesignresearch.cavisbackend.toNullable
 import org.marketdesignresearch.mechlib.mechanism.auctions.IllegalBidException
 import org.marketdesignresearch.mechlib.core.Bundle
 import org.marketdesignresearch.mechlib.core.BundleBid
@@ -49,20 +48,19 @@ class AuctionController(private val auctionWrapperDAO: AuctionWrapperDAO) {
 
     @GetMapping("/auctions/{uuid}")
     fun getAuction(@PathVariable uuid: UUID): ResponseEntity<AuctionWrapper?> {
-        val auctionWrapper = SessionManagement.get(uuid)/* ?: run {
+        val auctionWrapper = SessionManagement.get(uuid) ?: run {
             val inDB = auctionWrapperDAO.findByIdOrNull(uuid)
             if (inDB != null) SessionManagement.load(inDB)
             inDB
-        }*/
+        }
         return ResponseEntity.of(Optional.ofNullable(auctionWrapper))
     }
 
     @DeleteMapping("/auctions/{uuid}")
     fun deleteAuction(@PathVariable uuid: UUID): ResponseEntity<Any> {
         val success = SessionManagement.delete(uuid)
-        if (!success) return ResponseEntity.notFound().build()
-        //if (!success && !auctionWrapperDAO.findById(uuid).isPresent) return ResponseEntity.notFound().build()
-        //auctionWrapperDAO.deleteById(uuid)
+        if (!success && !auctionWrapperDAO.findById(uuid).isPresent) return ResponseEntity.notFound().build()
+        auctionWrapperDAO.deleteById(uuid)
         return ResponseEntity.noContent().build()
     }
 

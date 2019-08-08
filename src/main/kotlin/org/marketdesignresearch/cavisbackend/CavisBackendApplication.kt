@@ -1,8 +1,6 @@
 package org.marketdesignresearch.cavisbackend
 
-import org.marketdesignresearch.cavisbackend.mongo.DocumentToGSVMLicenseConverter
-import org.marketdesignresearch.cavisbackend.mongo.GSVMBidderToDocumentConverter
-import org.marketdesignresearch.cavisbackend.mongo.GSVMLicenseToDocumentConverter
+import org.marketdesignresearch.cavisbackend.mongo.*
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import org.springframework.context.annotation.Bean
@@ -27,8 +25,8 @@ class CavisBackendApplication {
 
     @Bean
     fun customConversions() = MongoCustomConversions(listOf(
-            GSVMLicenseToDocumentConverter(),
-            DocumentToGSVMLicenseConverter(),
+            SATSGoodToDocumentConverter(),
+            DocumentToSATSGoodConverter(),
             GSVMBidderToDocumentConverter()
     ))
 

@@ -13,10 +13,9 @@ data class AuctionWrapper(
         @Id
         val id: UUID,
         val auction: Auction,
-        val auctionType: AuctionFactory
-) {
+        val auctionType: AuctionFactory,
         val createdAt: Date = Date()
-}
+)
 
 @Repository
 interface AuctionWrapperDAO: MongoRepository<AuctionWrapper, UUID>

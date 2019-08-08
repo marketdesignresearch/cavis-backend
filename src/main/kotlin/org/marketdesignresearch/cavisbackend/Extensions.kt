@@ -3,6 +3,8 @@ package org.marketdesignresearch.cavisbackend
 import org.apache.commons.codec.digest.DigestUtils
 import org.marketdesignresearch.mechlib.core.Allocation
 import org.marketdesignresearch.mechlib.core.Bundle
+import org.marketdesignresearch.mechlib.core.SimpleXORDomain
+import org.marketdesignresearch.mechlib.mechanism.auctions.cca.CCAuction
 import java.util.*
 
 fun Bundle.sha256Hex(): String {
@@ -13,4 +15,4 @@ fun Bundle.sha256Hex(): String {
     )
 }
 
-fun <T : Any> Optional<T>.toNullable(): T? = this.orElse(null)
+fun CCAuction(): CCAuction = CCAuction(SimpleXORDomain(listOf(), listOf()))
