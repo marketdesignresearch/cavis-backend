@@ -57,7 +57,11 @@ class AuctionController(private val auctionWrapperDAO: AuctionWrapperDAO) {
     fun getAuction(@PathVariable uuid: UUID): ResponseEntity<AuctionWrapper?> {
         val auctionWrapper = SessionManagement.get(uuid) ?: run {
             val inDB = auctionWrapperDAO.findByIdWithoutSATS(uuid)
-            if (inDB != null) SessionManagement.load(inDB)
+            if (inDB != null) {
+                SessionManagement.load(inDB)
+                inDB.active = true
+                auctionWrapperDAO.save(inDB)
+            }
             inDB
         }
         return ResponseEntity.of(Optional.ofNullable(auctionWrapper))
