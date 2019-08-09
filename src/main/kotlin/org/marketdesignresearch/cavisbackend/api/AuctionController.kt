@@ -29,6 +29,7 @@ data class PerRoundRequest(val round: Int)
 data class JSONDemandQuery(val prices: Map<UUID, Double> = emptyMap(), val bidders: List<UUID> = emptyList(), val numberOfBundles: Int = 1)
 data class JSONValueQuery(val bundles: List<Map<UUID, Int>>, val bidders: List<UUID> = emptyList())
 data class JSONValueQueryResponse(val value: BigDecimal, val bundle: Bundle)
+data class ArchivedAuction(val uuid: UUID, val createdAt: Date, val domain: String, val auctionType: AuctionFactory)
 
 @CrossOrigin(origins = ["*"])
 @RestController
@@ -46,10 +47,16 @@ class AuctionController(private val auctionWrapperDAO: AuctionWrapperDAO) {
         return ResponseEntity.of(Optional.of(SessionManagement.get()))
     }
 
+    @GetMapping("/auctions/archived")
+    fun getArchivedAuctions(): ResponseEntity<List<ArchivedAuction>> {
+        val auctionWrappers = auctionWrapperDAO.findByActiveIsFalseWithoutSATS()
+        return ResponseEntity.ok(auctionWrappers.map { ArchivedAuction(it.id, it.createdAt, it.auction.domain.javaClass.simpleName, it.auctionType) })
+    }
+
     @GetMapping("/auctions/{uuid}")
     fun getAuction(@PathVariable uuid: UUID): ResponseEntity<AuctionWrapper?> {
         val auctionWrapper = SessionManagement.get(uuid) ?: run {
-            val inDB = auctionWrapperDAO.findByIdOrNull(uuid)
+            val inDB = auctionWrapperDAO.findByIdWithoutSATS(uuid)
             if (inDB != null) SessionManagement.load(inDB)
             inDB
         }
@@ -59,7 +66,18 @@ class AuctionController(private val auctionWrapperDAO: AuctionWrapperDAO) {
     @DeleteMapping("/auctions/{uuid}")
     fun deleteAuction(@PathVariable uuid: UUID): ResponseEntity<Any> {
         val success = SessionManagement.delete(uuid)
-        if (!success) return ResponseEntity.notFound().build()
+        val inDB = auctionWrapperDAO.findByIdOrNull(uuid)
+        if (inDB != null) auctionWrapperDAO.delete(inDB)
+        if (!success && inDB == null) return ResponseEntity.notFound().build()
+        return ResponseEntity.noContent().build()
+    }
+
+    @PostMapping("/auctions/{uuid}/archive")
+    fun archiveAuction(@PathVariable uuid: UUID): ResponseEntity<Any> {
+        val auctionWrapper = SessionManagement.get(uuid) ?: return ResponseEntity.notFound().build()
+        SessionManagement.delete(uuid)
+        auctionWrapper.active = false;
+        auctionWrapperDAO.save(auctionWrapper)
         return ResponseEntity.noContent().build()
     }
 

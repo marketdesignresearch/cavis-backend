@@ -27,12 +27,16 @@ object SessionManagement {
         return sessions.values.toSet()
     }
 
+    fun delete(uuid: UUID): Boolean {
+        return sessions.remove(uuid) != null
+    }
+
     fun load(auctionWrapper: AuctionWrapper) {
         sessions[auctionWrapper.id] = auctionWrapper
     }
 
-    fun delete(uuid: UUID): Boolean {
-        return sessions.remove(uuid) != null
+    fun loadAll(auctionWrapperList: List<AuctionWrapper>) {
+        auctionWrapperList.forEach { sessions[it.id] = it }
     }
 
 }

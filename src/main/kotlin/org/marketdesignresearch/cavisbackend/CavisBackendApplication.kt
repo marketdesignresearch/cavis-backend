@@ -1,6 +1,10 @@
 package org.marketdesignresearch.cavisbackend
 
-import org.marketdesignresearch.cavisbackend.mongo.*
+import org.marketdesignresearch.cavisbackend.mongo.AuctionWrapperDAO
+import org.marketdesignresearch.cavisbackend.mongo.DocumentToSATSGoodConverter
+import org.marketdesignresearch.cavisbackend.mongo.GSVMBidderToDocumentConverter
+import org.marketdesignresearch.cavisbackend.mongo.SATSGoodToDocumentConverter
+import org.springframework.boot.ApplicationRunner
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import org.springframework.context.annotation.Bean
@@ -29,6 +33,11 @@ class CavisBackendApplication {
             DocumentToSATSGoodConverter(),
             GSVMBidderToDocumentConverter()
     ))
+
+    @Bean
+    fun init(auctionWrapperDAO: AuctionWrapperDAO) =  ApplicationRunner {
+        SessionManagement.loadAll(auctionWrapperDAO.findAllActiveIsTrueWithoutSATS())
+    }
 
 }
 
