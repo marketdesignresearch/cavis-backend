@@ -9,9 +9,15 @@ services:
         MECHLIB_BRANCH: master
         SATS_BRANCH: feat-integrate-mechlib
     environment:
+      SPRING_DATA_MONGODB_URI: mongodb://mongo:27017/cavis
       CPLEX_STUDIO_DIR129: /opt/ibm/ILOG/CPLEX_Studio129
     ports:
       - 8080:8080
+
+  mongo:
+    image: mongo
+    volumes:
+      - mongodb:/data/db
 
   frontend:
     build:
@@ -22,3 +28,6 @@ services:
       - api
     ports:
       - 80:80
+
+volumes:
+  mongodb:

@@ -59,8 +59,7 @@ class AuctionController(private val auctionWrapperDAO: AuctionWrapperDAO) {
     @DeleteMapping("/auctions/{uuid}")
     fun deleteAuction(@PathVariable uuid: UUID): ResponseEntity<Any> {
         val success = SessionManagement.delete(uuid)
-        if (!success && !auctionWrapperDAO.findById(uuid).isPresent) return ResponseEntity.notFound().build()
-        auctionWrapperDAO.deleteById(uuid)
+        if (!success) return ResponseEntity.notFound().build()
         return ResponseEntity.noContent().build()
     }
 
