@@ -13,7 +13,6 @@ import com.fasterxml.jackson.databind.node.IntNode
 import com.fasterxml.jackson.databind.node.TextNode
 import org.marketdesignresearch.cavisbackend.sha256Hex
 import org.marketdesignresearch.mechlib.mechanism.auctions.Auction
-import org.marketdesignresearch.mechlib.mechanism.auctions.cca.CCARound
 import org.marketdesignresearch.mechlib.mechanism.auctions.cca.CCAuction
 import org.marketdesignresearch.mechlib.mechanism.auctions.pvm.PVMAuction
 import org.marketdesignresearch.mechlib.mechanism.auctions.pvm.ml.InferredValueFunctions
@@ -23,6 +22,8 @@ import org.marketdesignresearch.mechlib.core.bidder.Bidder
 import org.marketdesignresearch.mechlib.core.bidder.valuefunction.ValueFunction
 import org.marketdesignresearch.mechlib.core.price.LinearPrices
 import org.marketdesignresearch.mechlib.core.Outcome
+import org.marketdesignresearch.mechlib.mechanism.auctions.AuctionRound
+import org.marketdesignresearch.mechlib.mechanism.auctions.cca.CCAClockRound
 import org.spectrumauctions.sats.core.model.gsvm.GSVMBidder
 import org.spectrumauctions.sats.core.model.gsvm.GSVMLicense
 import org.springframework.boot.jackson.JsonComponent
@@ -56,14 +57,14 @@ class APISerialization {
                                serializerProvider: SerializerProvider) {
 
             jsonGenerator.writeStartObject()
-            jsonGenerator.writeObjectField("domain", auction.domain) // TODO: Add keyword for domain
+            jsonGenerator.writeObjectField("domain", auction.domain)
             jsonGenerator.writeStringField("outcomeRule", auction.outcomeRuleGenerator.name)
             jsonGenerator.writeObjectField("currentPrices", auction.currentPrices)
             jsonGenerator.writeBooleanField("finished", auction.finished())
             if (auction is CCAuction) {
                 jsonGenerator.writeObjectField("supplementaryRounds", auction.supplementaryRounds)
-                jsonGenerator.writeStringField("currentRoundType",
-                        if (auction.currentRoundType == CCARound.Type.CLOCK) "Clock Round"
+                jsonGenerator.writeStringField("currentRoundType", // TODO
+                        if (auction.currentRoundType == "CLOCK") "Clock Round"
                         else "Supplementary Round")
             }
             if (auction is PVMAuction) {
@@ -80,6 +81,22 @@ class APISerialization {
             jsonGenerator.writeNumberField("allowedNumberOfBids", auction.allowedNumberOfBids())
             jsonGenerator.writeEndObject()
         }
+    }
+
+    class CCAClockRoundJsonSerializer : JsonSerializer<CCAClockRound>() {
+        override fun serialize(round: CCAClockRound, jsonGenerator: JsonGenerator,
+                               serializerProvider: SerializerProvider) {
+            jsonGenerator.writeStartObject()
+            jsonGenerator.writeNumberField("roundNumber", round.roundNumber)
+            jsonGenerator.writeObjectField("bids", round.bids)
+            jsonGenerator.writeObjectField("prices", round.prices)
+            jsonGenerator.writeObjectField("outcome", round.outcome)
+            jsonGenerator.writeStringField("description", round.description)
+            jsonGenerator.writeStringField("type", round.type)
+            jsonGenerator.writeObjectField("overDemand", round.overDemand)
+            jsonGenerator.writeEndObject()
+        }
+
     }
 
     class DomainJsonSerializer : JsonSerializer<Domain>() {

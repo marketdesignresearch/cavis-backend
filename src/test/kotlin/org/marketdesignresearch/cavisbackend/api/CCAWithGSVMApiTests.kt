@@ -16,7 +16,6 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.assertj.core.api.Assertions.*
-import org.marketdesignresearch.mechlib.mechanism.auctions.cca.CCARound
 
 @RunWith(SpringRunner::class)
 @SpringBootTest
@@ -126,7 +125,9 @@ class CCAWithGSVMApiTests {
                 .andExpect(jsonPath("$.auction.rounds[0].outcome.allocation.$bidder1Id.bundle.entries[0].good").value(item2Id!!))
                 .andExpect(jsonPath("$.auction.rounds[0].outcome.allocation.$bidder1Id.bundle.entries[0].amount").value(1))
                 .andExpect(jsonPath("$.auction.rounds[0].outcome.payments.totalPayments").value(0))
-                .andExpect(jsonPath("$.auction.rounds[0].type").value(CCARound.Type.CLOCK.name))
+                .andExpect(jsonPath("$.auction.rounds[0].type").value("CLOCK"))
+                .andExpect(jsonPath("$.auction.rounds[0].overDemand.$item1Id").value(0))
+                .andExpect(jsonPath("$.auction.rounds[0].overDemand.$item2Id").value(0))
 
 
     }

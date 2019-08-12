@@ -28,8 +28,8 @@ class MongoDBTests {
 
         val inputDomains: List<DomainWrapper> = listOf(
                 UnitDemandValueDomainWrapper(bidders, goods),
-                AdditiveValueDomainWrapper(bidders, goods),
-                GSVMDomainWrapper(seed = 1234L)
+                AdditiveValueDomainWrapper(bidders, goods)
+                //GSVMDomainWrapper(seed = 1234L) // TODO
                 //LSVMDomainWrapper(seed = 1234L),
                 //MRVMDomainWrapper(seed = 1234L)
         )
