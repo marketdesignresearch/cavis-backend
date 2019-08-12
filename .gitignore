@@ -1,3 +1,4 @@
+.env
 docker/ssh/*_rsa*
 *.bin
 HELP.md

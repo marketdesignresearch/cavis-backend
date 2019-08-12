@@ -20,10 +20,7 @@ services:
       - mongodb:/data/db
 
   frontend:
-    build:
-      context: ../cavis-frontend
-      args:
-        VUE_APP_API_URL: http://abt.ifi.uzh.ch:8080
+    build: ../cavis-frontend
     depends_on:
       - api
     ports:
@@ -31,3 +28,8 @@ services:
 
 volumes:
   mongodb:
+    driver: local
+    driver_opts:
+      type: none
+      device: ${MONGO_DB_PATH:?You must specify the MONGO_DB_PATH variable in your .env file}
+      o: bind
