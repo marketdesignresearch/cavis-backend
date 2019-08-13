@@ -5,23 +5,27 @@ import org.assertj.core.api.Assertions.fail
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
+import org.junit.jupiter.api.extension.ExtendWith
 import org.marketdesignresearch.cavisbackend.domains.*
 import org.marketdesignresearch.mechlib.core.SimpleGood
 import org.marketdesignresearch.mechlib.outcomerules.OutcomeRule
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.test.context.TestConfiguration
+import org.springframework.context.annotation.Bean
 import org.springframework.data.repository.findByIdOrNull
+import org.springframework.test.context.junit.jupiter.SpringExtension
 import java.math.RoundingMode
 import java.util.*
 import java.util.stream.Stream
 
 @SpringBootTest
-class MongoDBTests {
+internal class MongoDBTests {
     @Autowired
-    lateinit var auctionWrapperDAO: AuctionWrapperDAO
+    private lateinit var auctionWrapperDAO: AuctionWrapperDAO
 
-    val bidders = listOf(PerItemBidder("1"), PerItemBidder("2"), PerItemBidder("3"))
-    val goods = listOf(SimpleGood("A"), SimpleGood("B"))
+    private val bidders = listOf(PerItemBidder("1"), PerItemBidder("2"), PerItemBidder("3"))
+    private val goods = listOf(SimpleGood("A"), SimpleGood("B"))
 
     @TestFactory
     fun `MongoDB test for all domains and auctions`(): Stream<DynamicTest> {

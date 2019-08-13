@@ -19,7 +19,6 @@ import java.util.stream.Stream
 
 @SpringBootTest
 @AutoConfigureMockMvc
-//@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 class AllDomainsAllAuctionsTest {
 
     private val logger = LoggerFactory.getLogger(AllDomainsAllAuctionsTest::class.java)

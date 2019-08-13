@@ -10,8 +10,6 @@ import org.springframework.stereotype.Repository
 import java.util.*
 import java.time.ZonedDateTime
 
-
-
 @Document
 data class AuctionWrapper(
         @Id

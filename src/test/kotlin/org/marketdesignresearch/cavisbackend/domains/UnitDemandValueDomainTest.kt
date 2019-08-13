@@ -1,17 +1,18 @@
 package org.marketdesignresearch.cavisbackend.domains
 
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.Test
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 import org.marketdesignresearch.mechlib.core.Bundle
 import org.marketdesignresearch.mechlib.core.Good
 import org.marketdesignresearch.mechlib.core.SimpleGood
 import org.marketdesignresearch.mechlib.core.bidder.Bidder
 import org.marketdesignresearch.mechlib.core.price.LinearPrices
 import org.marketdesignresearch.mechlib.core.price.Price
-import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.test.context.junit.jupiter.SpringExtension
 import java.math.BigDecimal
 
-@SpringBootTest
+@ExtendWith(SpringExtension::class)
 class UnitDemandValueDomainTest {
 
    private val goodA = SimpleGood("A")
