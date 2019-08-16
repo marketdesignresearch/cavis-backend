@@ -15,6 +15,8 @@ import org.marketdesignresearch.mechlib.core.bid.Bids
 import org.marketdesignresearch.mechlib.core.price.LinearPrices
 import org.marketdesignresearch.mechlib.core.price.Price
 import org.marketdesignresearch.mechlib.core.Outcome
+import org.spectrumauctions.sats.core.model.SATSBidder
+import org.spectrumauctions.sats.core.model.SATSGood
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
@@ -38,7 +40,10 @@ class AuctionController(private val auctionWrapperDAO: AuctionWrapperDAO) {
     @PostMapping("/auctions", consumes = [MediaType.APPLICATION_JSON_VALUE])
     fun startAuction(@RequestBody body: AuctionSetting): ResponseEntity<AuctionWrapper> {
         val auctionWrapper = SessionManagement.create(body.domain.toDomain(), body.auctionType, body.auctionConfig)
-        auctionWrapperDAO.save(auctionWrapper)
+        if (auctionWrapper.auction.domain.goods.none { it is SATSGood } &&
+                auctionWrapper.auction.domain.bidders.none { it is SATSBidder }) {
+            auctionWrapperDAO.save(auctionWrapper)
+        }
         return ResponseEntity.ok(auctionWrapper)
     }
 
@@ -49,7 +54,7 @@ class AuctionController(private val auctionWrapperDAO: AuctionWrapperDAO) {
 
     @GetMapping("/auctions/archived")
     fun getArchivedAuctions(): ResponseEntity<List<ArchivedAuction>> {
-        val auctionWrappers = auctionWrapperDAO.findByActiveIsFalseWithoutSATS()
+        val auctionWrappers = auctionWrapperDAO.findAllActiveIsFalseWithoutSATS()
         return ResponseEntity.ok(auctionWrappers.map { ArchivedAuction(it.id, it.createdAt, it.auction.domain.javaClass.simpleName, it.auctionType) })
     }
 
@@ -60,7 +65,10 @@ class AuctionController(private val auctionWrapperDAO: AuctionWrapperDAO) {
             if (inDB != null) {
                 SessionManagement.load(inDB)
                 inDB.active = true
-                auctionWrapperDAO.save(inDB)
+                if (inDB.auction.domain.goods.none { it is SATSGood } &&
+                        inDB.auction.domain.bidders.none { it is SATSBidder }) {
+                    auctionWrapperDAO.save(inDB)
+                }
             }
             inDB
         }
@@ -81,7 +89,10 @@ class AuctionController(private val auctionWrapperDAO: AuctionWrapperDAO) {
         val auctionWrapper = SessionManagement.get(uuid) ?: return ResponseEntity.notFound().build()
         SessionManagement.delete(uuid)
         auctionWrapper.active = false;
-        auctionWrapperDAO.save(auctionWrapper)
+        if (auctionWrapper.auction.domain.goods.none { it is SATSGood } &&
+                auctionWrapper.auction.domain.bidders.none { it is SATSBidder }) {
+            auctionWrapperDAO.save(auctionWrapper)
+        }
         return ResponseEntity.noContent().build()
     }
 
@@ -142,7 +153,10 @@ class AuctionController(private val auctionWrapperDAO: AuctionWrapperDAO) {
         } catch (e: IllegalBidException) {
             return ResponseEntity.badRequest().body(e.message)
         }
-        auctionWrapperDAO.save(auctionWrapper)
+        if (auctionWrapper.auction.domain.goods.none { it is SATSGood } &&
+                auctionWrapper.auction.domain.bidders.none { it is SATSBidder }) {
+            auctionWrapperDAO.save(auctionWrapper)
+        }
         return ResponseEntity.ok(auctionWrapper)
     }
 
@@ -154,7 +168,10 @@ class AuctionController(private val auctionWrapperDAO: AuctionWrapperDAO) {
         if (uuids.isEmpty()) uuids.addAll(auction.domain.bidders.map { it.id })
         val bids = Bids()
         uuids.forEach { bids.setBid(auction.getBidder(it), auction.proposeBid(auction.getBidder(it))) }
-        auctionWrapperDAO.save(auctionWrapper)
+        if (auctionWrapper.auction.domain.goods.none { it is SATSGood } &&
+                auctionWrapper.auction.domain.bidders.none { it is SATSBidder }) {
+            auctionWrapperDAO.save(auctionWrapper)
+        }
         return ResponseEntity.ok(bids)
     }
 
@@ -166,7 +183,10 @@ class AuctionController(private val auctionWrapperDAO: AuctionWrapperDAO) {
         // TODO: For now, we get result directly. I'll have to think about whether
         //  I should make this the default in the MechLib, as for most auctions the result will be quickly available
         auction.getOutcomeAtRound(auction.numberOfRounds - 1)
-        auctionWrapperDAO.save(auctionWrapper)
+        if (auctionWrapper.auction.domain.goods.none { it is SATSGood } &&
+                auctionWrapper.auction.domain.bidders.none { it is SATSBidder }) {
+            auctionWrapperDAO.save(auctionWrapper)
+        }
         return ResponseEntity.ok(auctionWrapper)
     }
 
@@ -178,7 +198,10 @@ class AuctionController(private val auctionWrapperDAO: AuctionWrapperDAO) {
         // TODO: For now, we get result directly. I'll have to think about whether
         //  I should make this the default in the MechLib, as for most auctions the result will be quickly available
         auction.getOutcomeAtRound(auction.numberOfRounds - 1)
-        auctionWrapperDAO.save(auctionWrapper)
+        if (auctionWrapper.auction.domain.goods.none { it is SATSGood } &&
+                auctionWrapper.auction.domain.bidders.none { it is SATSBidder }) {
+            auctionWrapperDAO.save(auctionWrapper)
+        }
         return ResponseEntity.ok(auctionWrapper)
     }
 
@@ -193,7 +216,10 @@ class AuctionController(private val auctionWrapperDAO: AuctionWrapperDAO) {
         // TODO: For now, we get result directly. I'll have to think about whether
         //  I should make this the default in the MechLib, as for most auctions the result will be quickly available
         auction.getOutcomeAtRound(auction.numberOfRounds - 1)
-        auctionWrapperDAO.save(auctionWrapper)
+        if (auctionWrapper.auction.domain.goods.none { it is SATSGood } &&
+                auctionWrapper.auction.domain.bidders.none { it is SATSBidder }) {
+            auctionWrapperDAO.save(auctionWrapper)
+        }
         return ResponseEntity.ok(auctionWrapper)
     }
 
@@ -207,7 +233,10 @@ class AuctionController(private val auctionWrapperDAO: AuctionWrapperDAO) {
         // TODO: For now, we get result directly. I'll have to think about whether
         //  I should make this the default in the MechLib, as for most auctions the result will be quickly available
         auction.getOutcomeAtRound(auction.numberOfRounds - 1)
-        auctionWrapperDAO.save(auctionWrapper)
+        if (auctionWrapper.auction.domain.goods.none { it is SATSGood } &&
+                auctionWrapper.auction.domain.bidders.none { it is SATSBidder }) {
+            auctionWrapperDAO.save(auctionWrapper)
+        }
         return ResponseEntity.ok(auctionWrapper)
     }
 
@@ -217,7 +246,10 @@ class AuctionController(private val auctionWrapperDAO: AuctionWrapperDAO) {
         return try {
             val bids = auctionWrapper.auction.getBidsAt(body.round)
             auctionWrapper.auction.resetToRound(body.round)
-            auctionWrapperDAO.save(auctionWrapper)
+            if (auctionWrapper.auction.domain.goods.none { it is SATSGood } &&
+                    auctionWrapper.auction.domain.bidders.none { it is SATSBidder }) {
+                auctionWrapperDAO.save(auctionWrapper)
+            }
             ResponseEntity.ok(bids)
         } catch (e: IllegalArgumentException) {
             ResponseEntity.badRequest().build()
@@ -228,7 +260,10 @@ class AuctionController(private val auctionWrapperDAO: AuctionWrapperDAO) {
     fun getResult(@PathVariable uuid: UUID): ResponseEntity<Outcome> {
         val auctionWrapper = SessionManagement.get(uuid) ?: return ResponseEntity.notFound().build()
         val outcome = auctionWrapper.auction.outcome
-        auctionWrapperDAO.save(auctionWrapper)
+        if (auctionWrapper.auction.domain.goods.none { it is SATSGood } &&
+                auctionWrapper.auction.domain.bidders.none { it is SATSBidder }) {
+            auctionWrapperDAO.save(auctionWrapper)
+        }
         return ResponseEntity.ok(outcome)
     }
 
@@ -240,7 +275,10 @@ class AuctionController(private val auctionWrapperDAO: AuctionWrapperDAO) {
         } catch (e: IllegalArgumentException) {
             return ResponseEntity.badRequest().build()
         }
-        auctionWrapperDAO.save(auctionWrapper)
+        if (auctionWrapper.auction.domain.goods.none { it is SATSGood } &&
+                auctionWrapper.auction.domain.bidders.none { it is SATSBidder }) {
+            auctionWrapperDAO.save(auctionWrapper)
+        }
         return ResponseEntity.ok(mechanismResult)
     }
 }

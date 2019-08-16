@@ -29,5 +29,5 @@ interface AuctionWrapperDAO: MongoRepository<AuctionWrapper, UUID> {
         fun findAllActiveIsTrueWithoutSATS(): List<AuctionWrapper>
 
         @Query("{'auction.domain._class' : { '\$regex': '^((?!\\\\.sats\\\\.)[\\\\s\\\\S])*\$' }, 'active' : false }")
-        fun findByActiveIsFalseWithoutSATS(): List<AuctionWrapper>
+        fun findAllActiveIsFalseWithoutSATS(): List<AuctionWrapper>
 }
