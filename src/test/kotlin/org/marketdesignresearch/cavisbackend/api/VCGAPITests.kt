@@ -32,7 +32,7 @@ class VCGAPITests {
                 .andExpect(status().isOk)
                 .andExpect(jsonPath("$.id").exists())
                 .andExpect(jsonPath("$.id").isString)
-                .andExpect(jsonPath("$.auctionType").value("VCG_XOR"))
+                .andExpect(jsonPath("$.auctionType").value("VCG"))
                 .andExpect(jsonPath("$.auction.domain.bidders[0].id").isString)
                 .andExpect(jsonPath("$.auction.domain.bidders[0].name").value("1"))
                 .andExpect(jsonPath("$.auction.domain.bidders[1].id").isString)
@@ -139,7 +139,7 @@ class VCGAPITests {
                     .put("goods", JSONArray()
                             .put(JSONObject().put("name", "A"))
                             .put(JSONObject().put("name", "B"))))
-            .put("auctionType", "VCG_XOR")
+            .put("auctionType", "VCG")
 
     private fun created(): JSONObject = JSONObject(mvc.perform(
             post("/auctions/")

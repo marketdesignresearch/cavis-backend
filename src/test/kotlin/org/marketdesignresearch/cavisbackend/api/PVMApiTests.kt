@@ -39,7 +39,7 @@ class PVMApiTests {
                             .put(JSONObject().put("name", "B"))
                             .put(JSONObject().put("name", "C"))
                             .put(JSONObject().put("name", "D"))))
-            .put("auctionType", "PVM_VCG")
+            .put("auctionType", "PVM")
 
     @Test
     fun `Should create new PVM auction`() {
@@ -82,7 +82,7 @@ class PVMApiTests {
                 }
                 .andExpect(jsonPath("$.id").exists())
                 .andExpect(jsonPath("$.id").isString)
-                .andExpect(jsonPath("$.auctionType").value("PVM_VCG"))
+                .andExpect(jsonPath("$.auctionType").value("PVM"))
                 .andExpect(jsonPath("$.auction.domain").exists())
                 .andExpect(jsonPath("$.auction.domain.bidders").exists())
                 .andExpect(jsonPath("$.auction.domain.bidders[0].id").isString)

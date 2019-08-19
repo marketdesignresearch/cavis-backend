@@ -39,7 +39,7 @@ class CCAApiTests {
                     .put("goods", JSONArray()
                             .put(JSONObject().put("name", "A"))
                             .put(JSONObject().put("name", "B"))))
-            .put("auctionType", "CCA_VCG")
+            .put("auctionType", "CCA")
 
     @Test
     fun `Should create new CCA auction`() {
@@ -78,7 +78,7 @@ class CCAApiTests {
                 }
                 .andExpect(jsonPath("$.id").exists())
                 .andExpect(jsonPath("$.id").isString)
-                .andExpect(jsonPath("$.auctionType").value("CCA_VCG"))
+                .andExpect(jsonPath("$.auctionType").value("CCA"))
                 .andExpect(jsonPath("$.auction.domain").exists())
                 .andExpect(jsonPath("$.auction.domain.bidders").exists())
                 .andExpect(jsonPath("$.auction.domain.bidders[0].id").value(bidder1Id!!))

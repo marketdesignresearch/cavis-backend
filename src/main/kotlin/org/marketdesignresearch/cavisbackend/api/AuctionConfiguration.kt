@@ -1,19 +1,26 @@
 package org.marketdesignresearch.cavisbackend.api
 
+enum class PaymentRule { VCG, CCG }
+
 data class CCAConfiguration(
-        val supplementaryBids: Int = 10,
-        val priceUpdate: Double = 0.1
+        var supplementaryBids: Int = 10,
+        var priceUpdate: Double = 0.1,
+        var initialPriceUpdateIfPriceEqualsZero: Double = 1.0,
+        var paymentRule: PaymentRule = PaymentRule.VCG,
+        var maxRounds: Int = 100
 )
 
 data class PVMConfiguration(
-        val initialRoundBids: Int = 5
+        var initialRoundBids: Int = 5,
+        var paymentRule: PaymentRule = PaymentRule.VCG,
+        var maxRounds: Int = 100
 )
 
 data class AuctionConfiguration(
-        val maxBids: Int = 10,
-        val demandQueryTimeLimit: Double = 5.0,
-        val reservePrices: Map<String, Double> = hashMapOf(),
-        val useProposedReservePrices: Boolean = true,
-        val ccaConfig: CCAConfiguration = CCAConfiguration(),
-        val pvmConfig: PVMConfiguration = PVMConfiguration()
+        var maxBids: Int = 10,
+        var demandQueryTimeLimit: Double = 5.0,
+        var reservePrices: Map<String, Double> = hashMapOf(),
+        var useProposedReservePrices: Boolean = true,
+        var ccaConfig: CCAConfiguration = CCAConfiguration(),
+        var pvmConfig: PVMConfiguration = PVMConfiguration()
 )

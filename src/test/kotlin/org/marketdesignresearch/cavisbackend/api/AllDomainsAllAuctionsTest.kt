@@ -42,11 +42,9 @@ class AllDomainsAllAuctionsTest {
                 "SEQUENTIAL_SECOND_PRICE",
                 "SIMULTANEOUS_FIRST_PRICE",
                 "SIMULTANEOUS_SECOND_PRICE",
-                "VCG_XOR",
-                "CCA_VCG",
-                "CCA_CCG",
-                "PVM_VCG",
-                "PVM_CCG"
+                "VCG",
+                "CCA",
+                "PVM"
         )
 
         return domains.stream()

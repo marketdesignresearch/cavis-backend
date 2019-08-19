@@ -303,7 +303,7 @@ class ApiTests {
         val body = JSONObject()
                 .put("domain", JSONObject()
                         .put("type", "gsvm"))
-                .put("auctionType", "CCA_VCG")
+                .put("auctionType", "CCA")
         val created = JSONObject(mvc.perform(
                 post("/auctions/")
                         .contentType(MediaType.APPLICATION_JSON)

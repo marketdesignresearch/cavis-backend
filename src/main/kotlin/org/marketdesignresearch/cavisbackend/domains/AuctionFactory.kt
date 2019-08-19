@@ -1,6 +1,7 @@
 package org.marketdesignresearch.cavisbackend.domains
 
 import org.marketdesignresearch.cavisbackend.api.AuctionConfiguration
+import org.marketdesignresearch.cavisbackend.api.PaymentRule
 import org.marketdesignresearch.mechlib.core.Domain
 import org.marketdesignresearch.mechlib.core.Good
 import org.marketdesignresearch.mechlib.core.price.LinearPrices
@@ -21,12 +22,9 @@ enum class AuctionFactory {
     SEQUENTIAL_SECOND_PRICE,
     SIMULTANEOUS_FIRST_PRICE,
     SIMULTANEOUS_SECOND_PRICE,
-    VCG_XOR,
-    VCG_OR,
-    CCA_VCG,
-    CCA_CCG,
-    PVM_VCG,
-    PVM_CCG;
+    VCG,
+    CCA,
+    PVM;
 
     fun getAuction(domain: Domain, config: AuctionConfiguration = AuctionConfiguration()): Auction {
         val auction = when (this) {
@@ -34,38 +32,40 @@ enum class AuctionFactory {
             SINGLE_ITEM_SECOND_PRICE, SIMULTANEOUS_SECOND_PRICE -> Auction(domain, OutcomeRuleGenerator.SECOND_PRICE)
             SEQUENTIAL_FIRST_PRICE -> SequentialAuction(domain, OutcomeRuleGenerator.FIRST_PRICE)
             SEQUENTIAL_SECOND_PRICE -> SequentialAuction(domain, OutcomeRuleGenerator.SECOND_PRICE)
-            VCG_XOR -> Auction(domain, OutcomeRuleGenerator.VCG_XOR)
-            VCG_OR -> Auction(domain, OutcomeRuleGenerator.VCG_OR)
-            CCA_VCG -> {
+            VCG -> {
+                val auction = Auction(domain, OutcomeRuleGenerator.VCG_XOR)
+                auction.maxBids = config.maxBids
+                return auction
+            }
+            CCA -> {
                 val cca: CCAuction
+                val outcomeRuleGenerator = when (config.ccaConfig.paymentRule) {
+                    PaymentRule.VCG -> OutcomeRuleGenerator.VCG_XOR
+                    PaymentRule.CCG -> OutcomeRuleGenerator.CCG
+                }
                 if (config.reservePrices.isNotEmpty()) {
                     val priceMap = hashMapOf<Good, Price>()
                     config.reservePrices.forEach { priceMap[domain.getGood(it.key)] = Price.of(it.value) }
-                    cca = CCAuction(domain, OutcomeRuleGenerator.VCG_XOR, LinearPrices(priceMap))
+                    cca = CCAuction(domain, outcomeRuleGenerator, LinearPrices(priceMap))
                 } else {
-                    cca = CCAuction(domain, OutcomeRuleGenerator.VCG_XOR, config.useProposedReservePrices)
+                    cca = CCAuction(domain, outcomeRuleGenerator, config.useProposedReservePrices)
                 }
-                cca.setPriceUpdater(SimpleRelativePriceUpdate().withPriceUpdate(BigDecimal.valueOf(config.ccaConfig.priceUpdate)))
+                cca.setPriceUpdater(SimpleRelativePriceUpdate().withPriceUpdate(BigDecimal.valueOf(config.ccaConfig.priceUpdate)).withInitialUpdate(BigDecimal.valueOf(config.ccaConfig.initialPriceUpdateIfPriceEqualsZero)))
                 cca.addSupplementaryRound(ProfitMaximizingSupplementaryRound().withNumberOfSupplementaryBids(config.ccaConfig.supplementaryBids))
+                cca.maxRounds = config.ccaConfig.maxRounds
                 return cca
             }
-            CCA_CCG -> {
-                val cca: CCAuction
-                if (config.reservePrices.isNotEmpty()) {
-                    val priceMap = hashMapOf<Good, Price>()
-                    config.reservePrices.forEach { priceMap[domain.getGood(it.key)] = Price.of(it.value) }
-                    cca = CCAuction(domain, OutcomeRuleGenerator.CCG, LinearPrices(priceMap))
-                } else {
-                    cca = CCAuction(domain, OutcomeRuleGenerator.CCG, config.useProposedReservePrices)
+            PVM -> {
+                val outcomeRuleGenerator = when (config.pvmConfig.paymentRule) {
+                    PaymentRule.VCG -> OutcomeRuleGenerator.VCG_XOR
+                    PaymentRule.CCG -> OutcomeRuleGenerator.CCG
                 }
-                cca.setPriceUpdater(SimpleRelativePriceUpdate().withPriceUpdate(BigDecimal.valueOf(config.ccaConfig.priceUpdate)))
-                cca.addSupplementaryRound(ProfitMaximizingSupplementaryRound().withNumberOfSupplementaryBids(config.ccaConfig.supplementaryBids))
-                return cca
+                val pvm = PVMAuction(domain, outcomeRuleGenerator, config.pvmConfig.initialRoundBids)
+                pvm.maxRounds = config.pvmConfig.maxRounds
+                return pvm
             }
-            PVM_VCG -> PVMAuction(domain, OutcomeRuleGenerator.VCG_XOR, config.pvmConfig.initialRoundBids)
-            PVM_CCG -> PVMAuction(domain, OutcomeRuleGenerator.CCG, config.pvmConfig.initialRoundBids)
         }
-        auction.maxBids = config.maxBids
+        auction.setMaxBids(config.maxBids)
         auction.setDemandQueryTimeLimit(config.demandQueryTimeLimit)
         return auction
     }
