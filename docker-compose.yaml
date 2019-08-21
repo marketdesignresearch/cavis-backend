@@ -28,8 +28,3 @@ services:
 
 volumes:
   mongodb:
-    driver: local
-    driver_opts:
-      type: none
-      device: ${MONGO_DB_PATH:?You must specify the MONGO_DB_PATH variable in your .env file}
-      o: bind
