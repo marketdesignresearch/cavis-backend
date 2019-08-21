@@ -26,6 +26,8 @@ import org.marketdesignresearch.mechlib.mechanism.auctions.AuctionRound
 import org.marketdesignresearch.mechlib.mechanism.auctions.cca.CCAClockRound
 import org.spectrumauctions.sats.core.model.gsvm.GSVMBidder
 import org.spectrumauctions.sats.core.model.gsvm.GSVMLicense
+import org.spectrumauctions.sats.core.model.lsvm.LSVMBidder
+import org.spectrumauctions.sats.core.model.lsvm.LSVMLicense
 import org.springframework.boot.jackson.JsonComponent
 import java.io.IOException
 
@@ -196,7 +198,43 @@ class APISerialization {
             jsonGenerator.writeStringField("id", gsvmBidder.id.toString())
             jsonGenerator.writeStringField("name", gsvmBidder.name)
             jsonGenerator.writeStringField("description", gsvmBidder.description)
+            jsonGenerator.writeStringField("shortDescription", gsvmBidder.description)
             jsonGenerator.writeNumberField("position", gsvmBidder.bidderPosition)
+            jsonGenerator.writeEndObject()
+        }
+    }
+
+    class LSVMLicenseJsonSerializer : JsonSerializer<LSVMLicense>() {
+
+        @Throws(IOException::class, JsonProcessingException::class)
+        override fun serialize(lsvmLicense: LSVMLicense, jsonGenerator: JsonGenerator,
+                               serializerProvider: SerializerProvider) {
+
+            jsonGenerator.writeStartObject()
+            jsonGenerator.writeStringField("id", lsvmLicense.uuid.toString())
+            jsonGenerator.writeStringField("name", lsvmLicense.name)
+            jsonGenerator.writeNumberField("longId", lsvmLicense.longId)
+            jsonGenerator.writeNumberField("rowPosition", lsvmLicense.rowPosition)
+            jsonGenerator.writeNumberField("columnPosition", lsvmLicense.columnPosition)
+            jsonGenerator.writeNumberField("quantity", lsvmLicense.quantity)
+            jsonGenerator.writeEndObject()
+        }
+    }
+    
+    class LSVMBidderJsonSerializer : JsonSerializer<LSVMBidder>() {
+
+        @Throws(IOException::class, JsonProcessingException::class)
+        override fun serialize(lsvmBidder: LSVMBidder, jsonGenerator: JsonGenerator,
+                               serializerProvider: SerializerProvider) {
+
+            jsonGenerator.writeStartObject()
+            jsonGenerator.writeStringField("id", lsvmBidder.id.toString())
+            jsonGenerator.writeStringField("name", lsvmBidder.name)
+            jsonGenerator.writeStringField("description", lsvmBidder.description)
+            jsonGenerator.writeStringField("shortDescription", lsvmBidder.description)
+            jsonGenerator.writeArrayFieldStart("proximity")
+            lsvmBidder.proximity.forEach { jsonGenerator.writeString(it.uuid.toString()) }
+            jsonGenerator.writeEndArray()
             jsonGenerator.writeEndObject()
         }
     }
