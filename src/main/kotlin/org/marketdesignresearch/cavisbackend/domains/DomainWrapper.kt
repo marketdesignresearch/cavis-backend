@@ -12,6 +12,7 @@ import org.marketdesignresearch.mechlib.core.Domain
 @JsonSubTypes(
     Type(value = AdditiveValueDomainWrapper::class, name = "additiveValue"),
     Type(value = UnitDemandValueDomainWrapper::class, name = "unitDemandValue"),
+    Type(value = LLGDomainWrapper::class, name = "llg"),
     Type(value = GSVMDomainWrapper::class, name = "gsvm"),
     Type(value = LSVMDomainWrapper::class, name = "lsvm"),
     Type(value = MRVMDomainWrapper::class, name = "mrvm")
