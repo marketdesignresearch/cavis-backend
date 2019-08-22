@@ -9,6 +9,7 @@ services:
         MECHLIB_BRANCH: master
         SATS_BRANCH: feat-integrate-mechlib
     environment:
+      SENTRY_DSN: https://53797e613e974dc3a6a0a82b7b936ee2@sentry.io/1538118
       SPRING_DATA_MONGODB_URI: mongodb://mongo:27017/cavis
       CPLEX_STUDIO_DIR129: /opt/ibm/ILOG/CPLEX_Studio129
     ports:

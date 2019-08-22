@@ -14,6 +14,12 @@ import springfox.documentation.builders.RequestHandlerSelectors
 import springfox.documentation.spi.DocumentationType
 import springfox.documentation.spring.web.plugins.Docket
 import springfox.documentation.swagger2.annotations.EnableSwagger2
+import org.springframework.web.servlet.HandlerExceptionResolver
+import org.springframework.boot.web.servlet.ServletContextInitializer
+
+
+
+
 
 
 @SpringBootApplication
@@ -37,6 +43,16 @@ class CavisBackendApplication {
     @Bean
     fun init(auctionWrapperDAO: AuctionWrapperDAO) =  ApplicationRunner {
         // SessionManagement.loadAll(auctionWrapperDAO.findAllActiveIsTrueWithoutSATS())
+    }
+
+    @Bean
+    fun sentryExceptionResolver(): HandlerExceptionResolver {
+        return io.sentry.spring.SentryExceptionResolver()
+    }
+
+    @Bean
+    fun sentryServletContextInitializer(): ServletContextInitializer {
+        return io.sentry.spring.SentryServletContextInitializer()
     }
 
 }
