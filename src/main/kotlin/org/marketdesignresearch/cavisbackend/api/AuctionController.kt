@@ -1,20 +1,16 @@
 package org.marketdesignresearch.cavisbackend.api
 
+import org.marketdesignresearch.cavisbackend.SessionManagement
 import org.marketdesignresearch.cavisbackend.domains.AuctionFactory
 import org.marketdesignresearch.cavisbackend.domains.DomainWrapper
 import org.marketdesignresearch.cavisbackend.mongo.AuctionWrapper
 import org.marketdesignresearch.cavisbackend.mongo.AuctionWrapperDAO
-import org.marketdesignresearch.cavisbackend.SessionManagement
-import org.marketdesignresearch.mechlib.mechanism.auctions.IllegalBidException
-import org.marketdesignresearch.mechlib.core.Bundle
-import org.marketdesignresearch.mechlib.core.BundleBid
-import org.marketdesignresearch.mechlib.core.BundleEntry
-import org.marketdesignresearch.mechlib.core.Good
+import org.marketdesignresearch.mechlib.core.*
 import org.marketdesignresearch.mechlib.core.bid.Bid
 import org.marketdesignresearch.mechlib.core.bid.Bids
 import org.marketdesignresearch.mechlib.core.price.LinearPrices
 import org.marketdesignresearch.mechlib.core.price.Price
-import org.marketdesignresearch.mechlib.core.Outcome
+import org.marketdesignresearch.mechlib.mechanism.auctions.IllegalBidException
 import org.spectrumauctions.sats.core.model.SATSBidder
 import org.spectrumauctions.sats.core.model.SATSGood
 import org.springframework.data.repository.findByIdOrNull
@@ -25,7 +21,12 @@ import java.math.BigDecimal
 import java.util.*
 import kotlin.collections.HashSet
 
-data class AuctionSetting(val domain: DomainWrapper, val auctionType: AuctionFactory, val auctionConfig: AuctionConfiguration = AuctionConfiguration())
+data class AuctionSetting(
+        val domain: DomainWrapper,
+        val auctionType: AuctionFactory,
+        val auctionConfig: AuctionConfiguration = AuctionConfiguration(),
+        val name: String = ""
+)
 data class JSONBid(val amount: BigDecimal, val bundle: Map<UUID, Int>)
 data class PerRoundRequest(val round: Int)
 data class JSONDemandQuery(val prices: Map<UUID, Double> = emptyMap(), val bidders: List<UUID> = emptyList(), val numberOfBundles: Int = 1)
@@ -39,7 +40,7 @@ class AuctionController(private val auctionWrapperDAO: AuctionWrapperDAO) {
 
     @PostMapping("/auctions", consumes = [MediaType.APPLICATION_JSON_VALUE])
     fun startAuction(@RequestBody body: AuctionSetting): ResponseEntity<AuctionWrapper> {
-        val auctionWrapper = SessionManagement.create(body.domain.toDomain(), body.auctionType, body.auctionConfig)
+        val auctionWrapper = SessionManagement.create(body.domain.toDomain(), body.auctionType, body.auctionConfig, body.name)
         if (auctionWrapper.auction.domain.goods.none { it is SATSGood } &&
                 auctionWrapper.auction.domain.bidders.none { it is SATSBidder }) {
             auctionWrapperDAO.save(auctionWrapper)

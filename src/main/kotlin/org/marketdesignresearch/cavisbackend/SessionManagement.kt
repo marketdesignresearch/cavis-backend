@@ -12,11 +12,12 @@ object SessionManagement {
 
     private val sessions: HashMap<UUID, AuctionWrapper> = HashMap()
 
-    fun create(domain: Domain, type: AuctionFactory, auctionConfig: AuctionConfiguration): AuctionWrapper {
+    fun create(domain: Domain, type: AuctionFactory, auctionConfig: AuctionConfiguration, name: String = ""): AuctionWrapper {
         val uuid = UUID.randomUUID()
         val auction = type.getAuction(domain, auctionConfig)
-        sessions[uuid] = AuctionWrapper(uuid, auction, type)
-        return AuctionWrapper(uuid, auction, type)
+        val auctionWrapper = AuctionWrapper(uuid, auction, type, name)
+        sessions[uuid] = auctionWrapper
+        return auctionWrapper
     }
 
     fun get(uuid: UUID): AuctionWrapper? {

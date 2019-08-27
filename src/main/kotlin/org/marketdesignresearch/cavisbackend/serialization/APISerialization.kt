@@ -198,7 +198,7 @@ class APISerialization {
             jsonGenerator.writeStringField("id", gsvmBidder.id.toString())
             jsonGenerator.writeStringField("name", gsvmBidder.name)
             jsonGenerator.writeStringField("description", gsvmBidder.description)
-            jsonGenerator.writeStringField("shortDescription", gsvmBidder.description)
+            jsonGenerator.writeStringField("shortDescription", gsvmBidder.shortDescription)
             jsonGenerator.writeNumberField("position", gsvmBidder.bidderPosition)
             jsonGenerator.writeEndObject()
         }
@@ -231,7 +231,7 @@ class APISerialization {
             jsonGenerator.writeStringField("id", lsvmBidder.id.toString())
             jsonGenerator.writeStringField("name", lsvmBidder.name)
             jsonGenerator.writeStringField("description", lsvmBidder.description)
-            jsonGenerator.writeStringField("shortDescription", lsvmBidder.description)
+            jsonGenerator.writeStringField("shortDescription", lsvmBidder.shortDescription)
             jsonGenerator.writeArrayFieldStart("proximity")
             lsvmBidder.proximity.forEach { jsonGenerator.writeString(it.uuid.toString()) }
             jsonGenerator.writeEndArray()

@@ -39,6 +39,7 @@ class ApiTests {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body().toString()))
                 .andExpect(status().isOk)
+                .andExpect(jsonPath("$.name").value("TestAuction A"))
                 .andExpect(jsonPath("$.id").exists())
                 .andExpect(jsonPath("$.id").isString)
                 .andExpect(jsonPath("$.auctionType").value("SINGLE_ITEM_SECOND_PRICE"))
@@ -369,6 +370,7 @@ class ApiTests {
                                     .put("name", "B")))
                     .put("goods", JSONArray().put(JSONObject().put("name", "item"))))
             .put("auctionType", "SINGLE_ITEM_SECOND_PRICE")
+            .put("name", "TestAuction A")
 
     private fun created(): JSONObject = JSONObject(mvc.perform(
             post("/auctions/")
