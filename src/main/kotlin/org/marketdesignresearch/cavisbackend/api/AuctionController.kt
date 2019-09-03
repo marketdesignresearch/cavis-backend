@@ -32,7 +32,7 @@ data class PerRoundRequest(val round: Int)
 data class JSONDemandQuery(val prices: Map<UUID, Double> = emptyMap(), val bidders: List<UUID> = emptyList(), val numberOfBundles: Int = 1)
 data class JSONValueQuery(val bundles: List<Map<UUID, Int>>, val bidders: List<UUID> = emptyList())
 data class JSONValueQueryResponse(val value: BigDecimal, val bundle: Bundle)
-data class ArchivedAuction(val uuid: UUID, val createdAt: Date, val domain: String, val auctionType: AuctionFactory)
+data class ArchivedAuction(val uuid: UUID, val name: String, val createdAt: Date, val domain: String, val auctionType: AuctionFactory)
 
 @CrossOrigin(origins = ["*"])
 @RestController
@@ -56,7 +56,7 @@ class AuctionController(private val auctionWrapperDAO: AuctionWrapperDAO) {
     @GetMapping("/auctions/archived")
     fun getArchivedAuctions(): ResponseEntity<List<ArchivedAuction>> {
         val auctionWrappers = auctionWrapperDAO.findAllActiveIsFalseWithoutSATS()
-        return ResponseEntity.ok(auctionWrappers.map { ArchivedAuction(it.id, it.createdAt, it.auction.domain.javaClass.simpleName, it.auctionType) })
+        return ResponseEntity.ok(auctionWrappers.map { ArchivedAuction(it.id, it.name, it.createdAt, it.auction.domain.javaClass.simpleName, it.auctionType) })
     }
 
     @GetMapping("/auctions/{uuid}")
