@@ -42,7 +42,7 @@ class CavisBackendApplication {
 
     @Bean
     fun init(auctionWrapperDAO: AuctionWrapperDAO) =  ApplicationRunner {
-        // SessionManagement.loadAll(auctionWrapperDAO.findAllActiveIsTrueWithoutSATS())
+        SessionManagement.loadAll(auctionWrapperDAO.findAllActiveIsTrueWithoutSATS())
     }
 
     @Bean
