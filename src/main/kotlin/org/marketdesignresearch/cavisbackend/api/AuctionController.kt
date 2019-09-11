@@ -32,7 +32,7 @@ data class PerRoundRequest(val round: Int)
 data class JSONDemandQuery(val prices: Map<UUID, Double> = emptyMap(), val bidders: List<UUID> = emptyList(), val numberOfBundles: Int = 1)
 data class JSONValueQuery(val bundles: List<Map<UUID, Int>>, val bidders: List<UUID> = emptyList())
 data class JSONValueQueryResponse(val value: BigDecimal, val bundle: Bundle)
-data class ArchivedAuction(val uuid: UUID, val name: String, val createdAt: Date, val domain: String, val auctionType: AuctionFactory)
+data class ArchivedAuction(val id: UUID, val name: String, val createdAt: Date, val domain: String, val auctionType: AuctionFactory)
 
 @CrossOrigin(origins = ["*"])
 @RestController
