@@ -1,6 +1,6 @@
 ### Build container
 FROM maven:3.5.2-jdk-8 AS build
-ARG JOPT_BRANCH=develop
+ARG JOPT_BRANCH=master
 ARG MECHLIB_BRANCH=master
 ARG SATS_BRANCH=feat-integrate-mechlib
 
