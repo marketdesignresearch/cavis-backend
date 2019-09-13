@@ -44,7 +44,7 @@ class APISerialization {
             jsonGenerator.writeStartObject()
             allocation.tradesMap.forEach {
                 jsonGenerator.writeObjectFieldStart(it.key.id.toString())
-                jsonGenerator.writeNumberField("value", it.value.value)
+                jsonGenerator.writeNumberField("value", it.key.getValue(it.value.bundle))
                 jsonGenerator.writeObjectField("bundle", it.value.bundle)
                 jsonGenerator.writeEndObject()
             }
