@@ -11,6 +11,7 @@ import org.marketdesignresearch.mechlib.mechanism.auctions.cca.CCAuction
 import org.marketdesignresearch.mechlib.mechanism.auctions.cca.bidcollection.supplementaryround.ProfitMaximizingSupplementaryRound
 import org.marketdesignresearch.mechlib.mechanism.auctions.cca.priceupdate.SimpleRelativePriceUpdate
 import org.marketdesignresearch.mechlib.mechanism.auctions.pvm.PVMAuction
+import org.marketdesignresearch.mechlib.mechanism.auctions.pvm.ml.MLAlgorithm
 import org.marketdesignresearch.mechlib.mechanism.auctions.sequential.SequentialAuction
 import org.marketdesignresearch.mechlib.outcomerules.OutcomeRuleGenerator
 import java.math.BigDecimal
@@ -60,7 +61,7 @@ enum class AuctionFactory {
                     PaymentRule.VCG -> OutcomeRuleGenerator.VCG_XOR
                     PaymentRule.CCG -> OutcomeRuleGenerator.CCG
                 }
-                val pvm = PVMAuction(domain, outcomeRuleGenerator, config.pvmConfig.initialRoundBids)
+                val pvm = PVMAuction(domain, MLAlgorithm.Type.LINEAR_REGRESSION, outcomeRuleGenerator, config.pvmConfig.initialRoundBids)
                 pvm.maxRounds = config.pvmConfig.maxRounds
                 return pvm
             }
