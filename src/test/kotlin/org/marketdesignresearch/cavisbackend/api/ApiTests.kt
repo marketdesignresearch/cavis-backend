@@ -354,9 +354,9 @@ class ApiTests {
         mvc.perform(get("/auctions/${finished()}/result"))
                 .andDo { result -> logger.info("Request: {} | Response: {}", result.request.contentAsString, result.response.contentAsString) }
                 .andExpect(status().isOk)
-                //.andExpect(jsonPath("$.allocation.B.value").value(12))
-                //.andExpect(jsonPath("$.allocation.B.goods.item").value(1))
-                //.andExpect(jsonPath("$.payments.B").value(10))
+                .andExpect(jsonPath("$.socialWelfare").value(12))
+                .andExpect(jsonPath("$.revenue").value(10))
+                .andExpect(jsonPath("$.winnerUtilities").exists())
                 .andExpect(jsonPath("$.payments.totalPayments").value(10))
     }
 

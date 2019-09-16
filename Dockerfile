@@ -1,6 +1,5 @@
 ### Build container
 FROM maven:3.5.2-jdk-8 AS build
-ARG JOPT_BRANCH=master
 ARG MECHLIB_BRANCH=master
 ARG SATS_BRANCH=feat-integrate-mechlib
 
@@ -17,11 +16,9 @@ COPY docker/ssh/mechlib_rsa /root/.ssh/id_rsa
 RUN chmod 600 /root/.ssh/id_rsa \
         && git clone git@github.com:Clabfabs/marketmechanisms.git --single-branch --branch ${MECHLIB_BRANCH} \
         && rm -rf /root/.ssh/
-RUN git clone https://github.com/blubin/JOpt.git --single-branch --branch ${JOPT_BRANCH}
 RUN git clone https://github.com/spectrumauctions/sats.git --single-branch --branch ${SATS_BRANCH}
 
 RUN mvn install:install-file -Dfile=cplex.jar -DgroupId=cplex -DartifactId=cplex -Dversion=12.9 -Dpackaging=jar \
-    && mvn clean install -f JOpt -DskipTests \
     && mvn clean install -f marketmechanisms -DskipTests \
     && mvn clean install -f sats -DskipTests \
     && cd /usr/src/app \

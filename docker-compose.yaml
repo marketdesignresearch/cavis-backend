@@ -5,7 +5,6 @@ services:
     build:
       context: .
       args:
-        JOPT_BRANCH: develop
         MECHLIB_BRANCH: master
         SATS_BRANCH: feat-integrate-mechlib
     environment:

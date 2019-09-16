@@ -15,6 +15,7 @@ import org.marketdesignresearch.mechlib.mechanism.auctions.pvm.ml.MLAlgorithm
 import org.marketdesignresearch.mechlib.mechanism.auctions.sequential.SequentialAuction
 import org.marketdesignresearch.mechlib.outcomerules.OutcomeRuleGenerator
 import java.math.BigDecimal
+import kotlin.math.max
 
 enum class AuctionFactory {
     SINGLE_ITEM_FIRST_PRICE,
@@ -61,13 +62,14 @@ enum class AuctionFactory {
                     PaymentRule.VCG -> OutcomeRuleGenerator.VCG_XOR
                     PaymentRule.CCG -> OutcomeRuleGenerator.CCG
                 }
-                val pvm = PVMAuction(domain, MLAlgorithm.Type.LINEAR_REGRESSION, outcomeRuleGenerator, config.pvmConfig.initialRoundBids)
+                val pvm = PVMAuction(domain, MLAlgorithm.Type.LINEAR_REGRESSION, outcomeRuleGenerator, max(domain.goods.size + 1, config.pvmConfig.initialRoundBids))
                 pvm.maxRounds = config.pvmConfig.maxRounds
                 return pvm
             }
         }
-        auction.setMaxBids(config.maxBids)
-        auction.setDemandQueryTimeLimit(config.demandQueryTimeLimit)
+        auction.maxBids = config.maxBids
+        auction.manualBids = config.manualBids
+        auction.demandQueryTimeLimit = config.demandQueryTimeLimit
         return auction
     }
 }

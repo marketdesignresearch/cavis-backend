@@ -19,10 +19,8 @@ import org.marketdesignresearch.mechlib.mechanism.auctions.pvm.ml.InferredValueF
 import org.marketdesignresearch.mechlib.core.*
 import org.marketdesignresearch.mechlib.core.bid.Bids
 import org.marketdesignresearch.mechlib.core.bidder.Bidder
-import org.marketdesignresearch.mechlib.core.bidder.valuefunction.ValueFunction
 import org.marketdesignresearch.mechlib.core.price.LinearPrices
 import org.marketdesignresearch.mechlib.core.Outcome
-import org.marketdesignresearch.mechlib.mechanism.auctions.AuctionRound
 import org.marketdesignresearch.mechlib.mechanism.auctions.cca.CCAClockRound
 import org.spectrumauctions.sats.core.model.gsvm.GSVMBidder
 import org.spectrumauctions.sats.core.model.gsvm.GSVMLicense
@@ -44,7 +42,8 @@ class APISerialization {
             jsonGenerator.writeStartObject()
             allocation.tradesMap.forEach {
                 jsonGenerator.writeObjectFieldStart(it.key.id.toString())
-                jsonGenerator.writeNumberField("value", it.key.getValue(it.value.bundle))
+                jsonGenerator.writeNumberField("value", it.value.value)
+                jsonGenerator.writeNumberField("trueValue", it.key.getValue(it.value.bundle))
                 jsonGenerator.writeObjectField("bundle", it.value.bundle)
                 jsonGenerator.writeEndObject()
             }
@@ -118,15 +117,22 @@ class APISerialization {
         }
     }
 
-    class AuctionResultJsonSerializer : JsonSerializer<Outcome>() {
+    class OutcomeJsonSerializer : JsonSerializer<Outcome>() {
 
         @Throws(IOException::class, JsonProcessingException::class)
-        override fun serialize(auctionResult: Outcome, jsonGenerator: JsonGenerator,
+        override fun serialize(outcome: Outcome, jsonGenerator: JsonGenerator,
                                serializerProvider: SerializerProvider) {
 
             jsonGenerator.writeStartObject()
-            jsonGenerator.writeObjectField("allocation", auctionResult.allocation)
-            jsonGenerator.writeObjectField("payments", auctionResult.payment)
+            jsonGenerator.writeObjectField("allocation", outcome.allocation)
+            jsonGenerator.writeObjectField("payments", outcome.payment)
+            jsonGenerator.writeObjectField("revenue", outcome.revenue)
+            jsonGenerator.writeObjectField("socialWelfare", outcome.socialWelfare)
+            jsonGenerator.writeObjectFieldStart("winnerUtilities")
+            outcome.winners.forEach {
+                jsonGenerator.writeNumberField(it.id.toString(), outcome.payoffOf(it))
+            }
+            jsonGenerator.writeEndObject()
             jsonGenerator.writeEndObject()
         }
     }
