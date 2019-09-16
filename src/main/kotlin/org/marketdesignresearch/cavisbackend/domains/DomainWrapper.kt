@@ -19,6 +19,7 @@ import org.marketdesignresearch.mechlib.core.Domain
     Type(value = MRVMDomainWrapper::class, name = "mrvm")
 )
 interface DomainWrapper {
-    fun toDomain(): Domain
+    fun toDomain(seed: Long): Domain
+    fun toDomain(): Domain { return toDomain(System.currentTimeMillis()) }
     fun getName(): String
 }

@@ -16,9 +16,11 @@ data class AuctionWrapper(
         val id: UUID,
         val auction: Auction,
         val auctionType: AuctionFactory,
-        val name: String = "",
+        val seed: Long,
+        var name: String = "",
         val createdAt: Date = Date(),
-        var active: Boolean = true
+        var active: Boolean = true,
+        var tags: List<String> = arrayListOf()
 )
 
 @Repository

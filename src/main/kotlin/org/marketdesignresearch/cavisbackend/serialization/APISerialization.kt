@@ -22,6 +22,7 @@ import org.marketdesignresearch.mechlib.core.bidder.Bidder
 import org.marketdesignresearch.mechlib.core.price.LinearPrices
 import org.marketdesignresearch.mechlib.core.Outcome
 import org.marketdesignresearch.mechlib.mechanism.auctions.cca.CCAClockRound
+import org.marketdesignresearch.mechlib.mechanism.auctions.pvm.PVMAuctionRound
 import org.spectrumauctions.sats.core.model.gsvm.GSVMBidder
 import org.spectrumauctions.sats.core.model.gsvm.GSVMLicense
 import org.spectrumauctions.sats.core.model.lsvm.LSVMBidder
@@ -80,6 +81,7 @@ class APISerialization {
             auction.restrictedBids().forEach{ jsonGenerator.writeObjectField(it.key.id.toString(), it.value) }
             jsonGenerator.writeEndObject()
             jsonGenerator.writeNumberField("allowedNumberOfBids", auction.allowedNumberOfBids())
+            jsonGenerator.writeNumberField("manualBids", auction.manualBids)
             jsonGenerator.writeEndObject()
         }
     }
@@ -100,6 +102,20 @@ class APISerialization {
 
     }
 
+    class PVMRoundJsonSerializer : JsonSerializer<PVMAuctionRound>() {
+        override fun serialize(round: PVMAuctionRound, jsonGenerator: JsonGenerator,
+                               serializerProvider: SerializerProvider) {
+            jsonGenerator.writeStartObject()
+            jsonGenerator.writeNumberField("roundNumber", round.roundNumber)
+            jsonGenerator.writeObjectField("bids", round.bids)
+            jsonGenerator.writeObjectField("outcome", round.outcome)
+            jsonGenerator.writeStringField("description", round.description)
+            jsonGenerator.writeObjectField("inferredOptimalAllocation", round.inferredOptimalAllocation)
+            jsonGenerator.writeEndObject()
+        }
+
+    }
+
     class DomainJsonSerializer : JsonSerializer<Domain>() {
 
         @Throws(IOException::class, JsonProcessingException::class)
@@ -110,6 +126,7 @@ class APISerialization {
             jsonGenerator.writeObjectField("type", domain::class.simpleName)
             jsonGenerator.writeObjectField("bidders", domain.bidders)
             jsonGenerator.writeObjectField("goods", domain.goods)
+            jsonGenerator.writeBooleanField("efficientAllocationCalculated", domain.hasEfficientAllocationCalculated())
             if (domain.hasEfficientAllocationCalculated()) {
                 jsonGenerator.writeObjectField("efficientAllocation", domain.efficientAllocation)
                 jsonGenerator.writeNumberField("efficientSocialWelfare", domain.efficientAllocation.trueSocialWelfare)

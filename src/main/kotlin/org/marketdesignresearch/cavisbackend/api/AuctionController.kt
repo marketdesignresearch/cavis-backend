@@ -11,6 +11,7 @@ import org.marketdesignresearch.mechlib.core.bid.Bids
 import org.marketdesignresearch.mechlib.core.price.LinearPrices
 import org.marketdesignresearch.mechlib.core.price.Price
 import org.marketdesignresearch.mechlib.mechanism.auctions.IllegalBidException
+import org.marketdesignresearch.mechlib.mechanism.auctions.pvm.PVMAuction
 import org.spectrumauctions.sats.core.model.SATSBidder
 import org.spectrumauctions.sats.core.model.SATSGood
 import org.springframework.data.repository.findByIdOrNull
@@ -25,14 +26,22 @@ data class AuctionSetting(
         val domain: DomainWrapper,
         val auctionType: AuctionFactory,
         val auctionConfig: AuctionConfiguration = AuctionConfiguration(),
-        val name: String = ""
+        val name: String = "",
+        val seed: Long = System.currentTimeMillis()
 )
 data class JSONBid(val amount: BigDecimal, val bundle: Map<UUID, Int>)
 data class PerRoundRequest(val round: Int)
 data class JSONDemandQuery(val prices: Map<UUID, Double> = emptyMap(), val bidders: List<UUID> = emptyList(), val numberOfBundles: Int = 1)
 data class JSONValueQuery(val bundles: List<Map<UUID, Int>>, val bidders: List<UUID> = emptyList())
 data class JSONValueQueryResponse(val value: BigDecimal, val bundle: Bundle)
-data class ArchivedAuction(val id: UUID, val name: String, val createdAt: Date, val domain: String, val auctionType: AuctionFactory)
+data class JSONInferredValueQuery(val bundle: Map<UUID, Int>, val bidder: UUID)
+data class JSONInferredValueQueryResponse(val inferredValues: List<BigDecimal>)
+data class AuctionListItem(val id: UUID, val name: String, val createdAt: Date, val domain: String, val auctionType: String,
+                           val numberOfBidders: Int, val numberOfGoods: Int, val roundsPlayed: Int, val seed: Long, val tags: List<String>) {
+    constructor(aw: AuctionWrapper) : this(aw.id, aw.name, aw.createdAt, aw.auction.domain.name, aw.auctionType.prettyName, aw.auction.domain.bidders.size, aw.auction.domain.goods.size, aw.auction.numberOfRounds, aw.seed, aw.tags)
+}
+
+data class AuctionEdit(val name: String?, val tags: List<String>?)
 
 @CrossOrigin(origins = ["*"])
 @RestController
@@ -40,7 +49,7 @@ class AuctionController(private val auctionWrapperDAO: AuctionWrapperDAO) {
 
     @PostMapping("/auctions", consumes = [MediaType.APPLICATION_JSON_VALUE])
     fun startAuction(@RequestBody body: AuctionSetting): ResponseEntity<AuctionWrapper> {
-        val auctionWrapper = SessionManagement.create(body.domain.toDomain(), body.auctionType, body.auctionConfig, body.name)
+        val auctionWrapper = SessionManagement.create(body.domain.toDomain(body.seed), body.auctionType, body.auctionConfig, body.seed, body.name)
         if (auctionWrapper.auction.domain.goods.none { it is SATSGood } &&
                 auctionWrapper.auction.domain.bidders.none { it is SATSBidder }) {
             auctionWrapperDAO.save(auctionWrapper)
@@ -49,14 +58,14 @@ class AuctionController(private val auctionWrapperDAO: AuctionWrapperDAO) {
     }
 
     @GetMapping("/auctions")
-    fun getAuctions(): ResponseEntity<Set<AuctionWrapper>> {
-        return ResponseEntity.of(Optional.of(SessionManagement.get()))
+    fun getAuctions(): ResponseEntity<List<AuctionListItem>> {
+        return ResponseEntity.ok(SessionManagement.get().map { AuctionListItem(it) })
     }
 
     @GetMapping("/auctions/archived")
-    fun getArchivedAuctions(): ResponseEntity<List<ArchivedAuction>> {
+    fun getArchivedAuctions(): ResponseEntity<List<AuctionListItem>> {
         val auctionWrappers = auctionWrapperDAO.findAllActiveIsFalseWithoutSATS()
-        return ResponseEntity.ok(auctionWrappers.map { ArchivedAuction(it.id, it.name, it.createdAt, it.auction.domain.javaClass.simpleName, it.auctionType) })
+        return ResponseEntity.ok(auctionWrappers.map { AuctionListItem(it) })
     }
 
     @GetMapping("/auctions/{uuid}")
@@ -97,6 +106,18 @@ class AuctionController(private val auctionWrapperDAO: AuctionWrapperDAO) {
         return ResponseEntity.noContent().build()
     }
 
+    @PatchMapping("/auctions/{uuid}")
+    fun patchAuction(@PathVariable uuid: UUID, @RequestBody body: AuctionEdit): ResponseEntity<AuctionWrapper> {
+        val auctionWrapper = SessionManagement.get(uuid) ?: return ResponseEntity.notFound().build()
+        if (body.name != null) auctionWrapper.name = body.name
+        if (body.tags != null) auctionWrapper.tags = body.tags
+        if (auctionWrapper.auction.domain.goods.none { it is SATSGood } &&
+                auctionWrapper.auction.domain.bidders.none { it is SATSBidder }) {
+            auctionWrapperDAO.save(auctionWrapper)
+        }
+        return ResponseEntity.ok(auctionWrapper)
+    }
+
     @PostMapping("/auctions/{uuid}/demandquery")
     fun postDemandQuery(@PathVariable uuid: UUID, @RequestBody body: JSONDemandQuery): ResponseEntity<Map<String, List<Bundle>>> {
         val auctionWrapper = SessionManagement.get(uuid) ?: return ResponseEntity.notFound().build()
@@ -131,6 +152,22 @@ class AuctionController(private val auctionWrapperDAO: AuctionWrapperDAO) {
         }
 
         return ResponseEntity.ok(result)
+    }
+
+    @PostMapping("/auctions/{uuid}/inferredvaluequery")
+    fun postInferredValueQuery(@PathVariable uuid: UUID, @RequestBody body: JSONInferredValueQuery): ResponseEntity<JSONInferredValueQueryResponse> {
+        val auctionWrapper = SessionManagement.get(uuid) ?: return ResponseEntity.notFound().build()
+        val auction = auctionWrapper.auction
+        if (auction !is PVMAuction) return ResponseEntity.badRequest().build()
+        val bidder = auction.getBidder(body.bidder)
+        val bundleEntries = hashSetOf<BundleEntry>()
+        body.bundle.forEach { (k, v) -> bundleEntries.add(BundleEntry(auction.getGood(k), v)) }
+        val bundle = Bundle(bundleEntries)
+        val result = arrayListOf<BigDecimal>()
+        for (i in 0 until auction.numberOfRounds) {
+            result.add(auction.getInferredValue(bidder, bundle, i))
+        }
+        return ResponseEntity.ok(JSONInferredValueQueryResponse(result))
     }
 
     @PostMapping("/auctions/{uuid}/bids", consumes = [MediaType.APPLICATION_JSON_VALUE])

@@ -25,7 +25,7 @@ class LLGDomainTest {
 
     @Test
     fun `Should create valid interesting LLG Domain`() {
-        val domain = LLGDomainWrapper().toDomain()
+        val domain = LLGDomainWrapper().toDomain() as SimpleXORDomain
 
         val goodA = domain.goods[0]
         val goodB = domain.goods[1]
@@ -60,7 +60,7 @@ class LLGDomainTest {
 
     @Test
     fun `Should create valid uninteresting LLG Domain`() {
-        val domain = LLGDomainWrapper(interestingCase = false).toDomain()
+        val domain = LLGDomainWrapper(interestingCase = false).toDomain() as SimpleXORDomain
         val A = Bundle.of(domain.goods[0])
         val B = Bundle.of(domain.goods[1])
         val AB = Bundle.of(domain.goods[0], domain.goods[1])
@@ -73,6 +73,22 @@ class LLGDomainTest {
         val ccgRule = OutcomeRuleGenerator.CCG.getOutcomeRule(Bids.fromXORBidders(domain.bidders))
         assertThat(ccgRule.allocation.winners).isEqualTo(vcgRule.allocation.winners)
         assertThat(ccgRule.payment.totalPayments).isEqualByComparingTo(vcgRule.payment.totalPayments)
+
+    }
+
+    @Test
+    fun `Should sample same values with same seed`() {
+        val domainWrapper = LLGDomainWrapper()
+
+        val domain1 = domainWrapper.toDomain(54321)
+        val domain2 = domainWrapper.toDomain(54321)
+        val domain3 = domainWrapper.toDomain(54322)
+
+        // TODO: Make bidder comparison easier...
+        assertThat(domain1.bidders.map { it.value.bundleValues.map { bv -> bv.amount}.toSet() }.toSet() )
+                .isEqualTo(domain2.bidders.map { it.value.bundleValues.map { bv -> bv.amount}.toSet() }.toSet() )
+                .isNotEqualTo(domain3.bidders.map { it.value.bundleValues.map { bv -> bv.amount}.toSet() }.toSet() )
+        assertThat(domain1.goods).isEqualTo(domain2.goods).isEqualTo(domain3.goods)
 
     }
 }

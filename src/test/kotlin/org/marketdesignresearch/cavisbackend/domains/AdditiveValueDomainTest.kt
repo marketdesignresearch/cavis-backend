@@ -96,4 +96,22 @@ class AdditiveValueDomainTest {
         assertThat(bidder.getBestBundles(prices, 10, true)).containsExactly(A, AB, Bundle.EMPTY, B, AC, ABC, C, BC)
     }
 
+    @Test
+    fun `Should sample same values with same seed`() {
+        val domainWrapper = AdditiveValueDomainWrapper(
+                listOf(PerItemBidder("1"), PerItemBidder("2"), PerItemBidder("3")),
+                listOf(goodA, goodB, goodC))
+
+        val domain1 = domainWrapper.toDomain(54321)
+        val domain2 = domainWrapper.toDomain(54321)
+        val domain3 = domainWrapper.toDomain(54322)
+
+        // TODO: Make bidder comparison easier...
+        assertThat(domain1.bidders.map { it.value.bundleValues.map { bv -> bv.amount}.toSet() }.toSet() )
+                .isEqualTo(domain2.bidders.map { it.value.bundleValues.map { bv -> bv.amount}.toSet() }.toSet() )
+                .isNotEqualTo(domain3.bidders.map { it.value.bundleValues.map { bv -> bv.amount}.toSet() }.toSet() )
+        assertThat(domain1.goods).isEqualTo(domain2.goods).isEqualTo(domain3.goods)
+
+    }
+
 }

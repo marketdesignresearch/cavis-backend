@@ -18,10 +18,12 @@ data class AdditiveValueDomainWrapper(
         val goods: List<SimpleGood> = listOf(SimpleGood("A"), SimpleGood("B"))
 ) : DomainWrapper {
 
-    override fun toDomain(): SimpleORDomain {
+    override fun toDomain(seed: Long): SimpleORDomain {
         val additiveBidders = arrayListOf<AdditiveValueBidder>()
+        var count = 0
         bidders.forEach { bidder ->
             val distribution = UniformIntegerDistribution(bidder.min, bidder.max)
+            distribution.reseedRandomGenerator(seed + count++)
             val bundleValues = hashSetOf<BundleValue>()
             goods.forEach {
                 val amount = distribution.sample().toLong()

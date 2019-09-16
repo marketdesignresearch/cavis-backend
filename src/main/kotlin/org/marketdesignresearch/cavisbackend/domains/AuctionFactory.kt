@@ -17,16 +17,16 @@ import org.marketdesignresearch.mechlib.outcomerules.OutcomeRuleGenerator
 import java.math.BigDecimal
 import kotlin.math.max
 
-enum class AuctionFactory {
-    SINGLE_ITEM_FIRST_PRICE,
-    SINGLE_ITEM_SECOND_PRICE,
-    SEQUENTIAL_FIRST_PRICE,
-    SEQUENTIAL_SECOND_PRICE,
-    SIMULTANEOUS_FIRST_PRICE,
-    SIMULTANEOUS_SECOND_PRICE,
-    VCG,
-    CCA,
-    PVM;
+enum class AuctionFactory(val prettyName: String) {
+    SINGLE_ITEM_FIRST_PRICE("Single Item, First Price"),
+    SINGLE_ITEM_SECOND_PRICE("Single Item, Second Price"),
+    SEQUENTIAL_FIRST_PRICE("Sequential, First Price"),
+    SEQUENTIAL_SECOND_PRICE("Sequential, Second Price"),
+    SIMULTANEOUS_FIRST_PRICE("Simultaneous, First Price"),
+    SIMULTANEOUS_SECOND_PRICE("Simultaneous, Second Price"),
+    VCG("VCG"),
+    CCA("CCA"),
+    PVM("PVM");
 
     fun getAuction(domain: Domain, config: AuctionConfiguration = AuctionConfiguration()): Auction {
         val auction = when (this) {

@@ -23,10 +23,12 @@ data class UnitDemandValueDomainWrapper(
         }
     }
 
-    override fun toDomain(): SimpleUnitDemandDomain {
+    override fun toDomain(seed: Long): SimpleUnitDemandDomain {
         val unitDemandBidders = arrayListOf<UnitDemandBidder>()
+        var count = 0
         bidders.forEach { bidder ->
             val distribution = UniformIntegerDistribution(bidder.min, bidder.max)
+            distribution.reseedRandomGenerator(seed + count++)
             val value = distribution.sample().toBigDecimal()
             unitDemandBidders.add(UnitDemandBidder(bidder.name, value, goods))
         }

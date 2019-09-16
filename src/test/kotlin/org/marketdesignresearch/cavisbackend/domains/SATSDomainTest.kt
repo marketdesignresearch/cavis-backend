@@ -15,9 +15,9 @@ class SATSDomainTest {
     @TestFactory
     fun `SATS domain test factory`(): Stream<DynamicTest> {
         val inputDomains: List<DomainWrapper> = listOf(
-                GSVMDomainWrapper(seed = 1234L),
-                LSVMDomainWrapper(seed = 1234L),
-                MRVMDomainWrapper(seed = 1234L)
+                GSVMDomainWrapper(),
+                LSVMDomainWrapper(),
+                MRVMDomainWrapper()
         )
 
         val totalValues: List<String> = listOf(
@@ -37,7 +37,7 @@ class SATSDomainTest {
                 .map { domainWrapper ->
                     DynamicTest.dynamicTest("Testing ${domainWrapper.getName()}") {
                         val id = inputDomains.indexOf(domainWrapper)
-                        val domain = domainWrapper.toDomain()
+                        val domain = domainWrapper.toDomain(1234L)
                         assertThat(domain.efficientAllocation.totalAllocationValue.setScale(4, RoundingMode.DOWN)).isEqualByComparingTo(totalValues[id])
                         val winnerArray = winners[id].map { domain.bidders[it] }.toTypedArray()
                         assertThat(domain.efficientAllocation.winners).containsExactlyInAnyOrder(*winnerArray)

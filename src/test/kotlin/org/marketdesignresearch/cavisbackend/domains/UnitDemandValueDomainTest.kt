@@ -80,4 +80,20 @@ class UnitDemandValueDomainTest {
         assertThat(bidder.getBestBundles(prices, 10, true)).containsExactlyInAnyOrder(A, B, C, AB, AC, BC, Bundle.EMPTY, ABC)
     }
 
+    @Test
+    fun `Should sample same values with same seed`() {
+        val domainWrapper = UnitDemandValueDomainWrapper()
+
+        val domain1 = domainWrapper.toDomain(54321)
+        val domain2 = domainWrapper.toDomain(54321)
+        val domain3 = domainWrapper.toDomain(54322)
+
+        // TODO: Make bidder comparison easier...
+        assertThat(domain1.bidders.map { it.value }.toSet() )
+                .isEqualTo(domain2.bidders.map { it.value }.toSet() )
+                .isNotEqualTo(domain3.bidders.map { it.value }.toSet() )
+        assertThat(domain1.goods).isEqualTo(domain2.goods).isEqualTo(domain3.goods)
+
+    }
+
 }

@@ -121,7 +121,6 @@ class PVMApiTests {
                 .andDo { logger.info("Request: {} | Response: {}", it.request.contentAsString, it.response.contentAsString) }
                 .andExpect(status().isOk)
                 .andExpect(jsonPath("$.auction.rounds[0]").exists())
-                .andExpect(jsonPath("$.auction.rounds[0].inferredValues").exists())
                 .andExpect(jsonPath("$.auction.rounds[1]").doesNotExist())
                 .andExpect(jsonPath("$.auction.restrictedBids").exists())
                 .andExpect(jsonPath("$.auction.restrictedBids.$bidder1Id").isArray)
@@ -142,13 +141,7 @@ class PVMApiTests {
                 .andDo { logger.info("Request: {} | Response: {}", it.request.contentAsString, it.response.contentAsString) }
                 .andExpect(status().isOk)
                 .andExpect(jsonPath("$.auction.rounds[0]").exists())
-                .andExpect(jsonPath("$.auction.rounds[0].inferredValues.$bidder1Id").exists())
-                .andExpect(jsonPath("$.auction.rounds[0].inferredValues.$bidder2Id").exists())
-                .andExpect(jsonPath("$.auction.rounds[0].inferredValues.$bidder3Id").exists())
                 .andExpect(jsonPath("$.auction.rounds[1]").exists())
-                .andExpect(jsonPath("$.auction.rounds[1].inferredValues.$bidder1Id").exists())
-                .andExpect(jsonPath("$.auction.rounds[1].inferredValues.$bidder2Id").exists())
-                .andExpect(jsonPath("$.auction.rounds[1].inferredValues.$bidder3Id").exists())
                 .andExpect(jsonPath("$.auction.rounds[2]").doesNotExist())
                 .andExpect(jsonPath("$.auction.restrictedBids").exists())
                 .andExpect(jsonPath("$.auction.restrictedBids.$bidder1Id").isArray)
@@ -177,6 +170,15 @@ class PVMApiTests {
                 .andReturn().response.contentAsString).getJSONObject("auction").getJSONArray("rounds").getJSONObject(2).getJSONArray("bids")
 
         assertThat(bids.toString()).isEqualTo(nextRoundBids.toString())
+
+        val bidder1InferredValue = mvc.perform(post("/auctions/$id/inferredvaluequery")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(JSONObject()
+                        .put("bundle", JSONObject().put(item3Id, 1))
+                        .put("bidder", bidder1Id)
+                        .toString()))
+                .andDo { logger.info("Request: {} | Response: {}", it.request.contentAsString, it.response.contentAsString) }
+                .andExpect(status().isOk)
 
     }
 

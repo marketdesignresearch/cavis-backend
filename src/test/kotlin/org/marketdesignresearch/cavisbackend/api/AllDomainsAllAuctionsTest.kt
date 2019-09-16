@@ -32,6 +32,7 @@ class AllDomainsAllAuctionsTest {
         val domains: List<String> = listOf(
                 "additiveValue",
                 "unitDemandValue",
+                "synergy",
                 "llg",
                 "gsvm"
                 //"lsvm",

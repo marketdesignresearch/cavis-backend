@@ -24,15 +24,14 @@ internal class MongoDBTests {
     @Autowired
     private lateinit var auctionWrapperDAO: AuctionWrapperDAO
 
-    private val bidders = listOf(PerItemBidder("1"), PerItemBidder("2"), PerItemBidder("3"))
-    private val goods = listOf(SimpleGood("A"), SimpleGood("B"))
-
     @TestFactory
     fun `MongoDB test for all domains and auctions`(): Stream<DynamicTest> {
 
         val inputDomains: List<DomainWrapper> = listOf(
-                UnitDemandValueDomainWrapper(bidders, goods),
-                AdditiveValueDomainWrapper(bidders, goods)
+                UnitDemandValueDomainWrapper(),
+                AdditiveValueDomainWrapper(),
+                SynergyDomainWrapper(),
+                LLGDomainWrapper()
                 //GSVMDomainWrapper(seed = 1234L) // TODO
                 //LSVMDomainWrapper(seed = 1234L),
                 //MRVMDomainWrapper(seed = 1234L)
@@ -40,19 +39,22 @@ internal class MongoDBTests {
 
         return inputDomains.stream()
                 .flatMap { domainWrapper ->
-                        val domain = domainWrapper.toDomain()
-                        AuctionFactory.values().asList().stream().map { auctionFactory ->
-                            DynamicTest.dynamicTest("Testing DB storing & retrieving in ${domainWrapper.getName()}, using $auctionFactory") {
+                    val seed = System.currentTimeMillis()
+                    val domain = domainWrapper.toDomain(seed)
+                    AuctionFactory.values().asList().stream().map { auctionFactory ->
+                        DynamicTest.dynamicTest("Testing DB storing & retrieving in ${domainWrapper.getName()}, using $auctionFactory") {
                             val auction = auctionFactory.getAuction(domain)
-                            val auctionWrapper = AuctionWrapper(UUID.randomUUID(), auction, auctionFactory)
+                            val auctionWrapper = AuctionWrapper(UUID.randomUUID(), auction, auctionFactory, seed)
                             auctionWrapperDAO.save(auctionWrapper)
-                            val retrieved = auctionWrapperDAO.findByIdOrNull(auctionWrapper.id) ?: fail("Could not find object in DB.")
+                            val retrieved = auctionWrapperDAO.findByIdOrNull(auctionWrapper.id)
+                                    ?: fail("Could not find object in DB.")
                             assertThat(auctionWrapper).isEqualTo(retrieved)
                             while (!auction.finished()) {
                                 auction.advanceRound()
                             }
                             auctionWrapperDAO.save(auctionWrapper)
-                            val retrievedFinishedAuctionWrapper = auctionWrapperDAO.findByIdOrNull(auctionWrapper.id) ?: fail("Could not find object in DB.")
+                            val retrievedFinishedAuctionWrapper = auctionWrapperDAO.findByIdOrNull(auctionWrapper.id)
+                                    ?: fail("Could not find object in DB.")
                             assertThat(auctionWrapper).isEqualTo(retrievedFinishedAuctionWrapper)
                         }
                     }

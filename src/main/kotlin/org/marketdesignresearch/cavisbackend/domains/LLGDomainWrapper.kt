@@ -20,15 +20,19 @@ data class LLGDomainWrapper(
         val maxLocalValue: Int = 100
 ) : DomainWrapper {
 
-    override fun toDomain(): SimpleXORDomain {
+    override fun toDomain(seed: Long): SimpleXORDomain {
         val goodA = SimpleGood("A")
         val goodB = SimpleGood("B")
-        val valueL1 = UniformIntegerDistribution(1, maxLocalValue).sample()
-        val valueL2 = UniformIntegerDistribution(1, maxLocalValue).sample()
-        val valueG = when {
-            interestingCase -> UniformIntegerDistribution(max(valueL1, valueL2), valueL1 + valueL2).sample()
-            else -> UniformIntegerDistribution(valueL1 + valueL2 + 1, 2 * (valueL1 + valueL2)).sample()
+        val localDistribution = UniformIntegerDistribution(1, maxLocalValue)
+        localDistribution.reseedRandomGenerator(seed)
+        val valueL1 = localDistribution.sample()
+        val valueL2 = localDistribution.sample()
+        val globalDistribution = when {
+            interestingCase -> UniformIntegerDistribution(max(valueL1, valueL2), valueL1 + valueL2)
+            else -> UniformIntegerDistribution(valueL1 + valueL2 + 1, 2 * (valueL1 + valueL2))
         }
+        globalDistribution.reseedRandomGenerator(seed + 2)
+        val valueG = globalDistribution.sample()
         val bidderL1 = XORBidder("Local Bidder 1", XORValueFunction(setOf(BundleValue(BigDecimal.valueOf(valueL1.toLong()), Bundle.of(goodA)))))
         val bidderL2 = XORBidder("Local Bidder 2", XORValueFunction(setOf(BundleValue(BigDecimal.valueOf(valueL2.toLong()), Bundle.of(goodB)))))
         val bidderG = XORBidder("Global Bidder", XORValueFunction(setOf(BundleValue(BigDecimal.valueOf(valueG.toLong()), Bundle.of(goodA, goodB)))))

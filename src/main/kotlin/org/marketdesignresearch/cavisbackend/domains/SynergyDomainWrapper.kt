@@ -29,10 +29,12 @@ data class SynergyDomainWrapper(
         }
     }
 
-    override fun toDomain(): SimpleXORDomain {
+    override fun toDomain(seed: Long): SimpleXORDomain {
         val xorBidders = arrayListOf<XORBidder>()
+        var count = 0;
         bidders.forEach { bidder ->
             val distribution = UniformIntegerDistribution(bidder.min, bidder.max)
+            distribution.reseedRandomGenerator(seed + count++)
             val values = hashMapOf<SimpleGood, Int>()
             goods.forEach { values[it] = distribution.sample() }
             val bundleValues = hashSetOf<BundleValue>()

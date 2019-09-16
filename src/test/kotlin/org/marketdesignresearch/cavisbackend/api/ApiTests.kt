@@ -3,13 +3,11 @@ package org.marketdesignresearch.cavisbackend.api
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
-import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
@@ -40,23 +38,20 @@ class ApiTests {
                         .content(body().toString()))
                 .andExpect(status().isOk)
                 .andExpect(jsonPath("$.name").value("TestAuction A"))
-                .andExpect(jsonPath("$.id").exists())
+                .andExpect(jsonPath("$.seed").isNumber)
+                .andExpect(jsonPath("$.tags").isArray)
+                .andExpect(jsonPath("$.tags").isEmpty)
                 .andExpect(jsonPath("$.id").isString)
                 .andExpect(jsonPath("$.auctionType").value("SINGLE_ITEM_SECOND_PRICE"))
-                .andExpect(jsonPath("$.auction.domain").exists())
-                .andExpect(jsonPath("$.auction.domain.bidders").exists())
                 .andExpect(jsonPath("$.auction.domain.bidders[0].id").isString)
                 .andExpect(jsonPath("$.auction.domain.bidders[0].name").value("A"))
                 .andExpect(jsonPath("$.auction.domain.bidders[1].id").isString)
                 .andExpect(jsonPath("$.auction.domain.bidders[1].name").value("B"))
-                .andExpect(jsonPath("$.auction.domain.goods").exists())
-                .andExpect(jsonPath("$.auction.domain.goods[0]").exists())
                 .andExpect(jsonPath("$.auction.domain.goods[0].id").isString)
                 .andExpect(jsonPath("$.auction.domain.goods[0].name").value("item"))
                 .andExpect(jsonPath("$.auction.domain.goods[0].quantity").value(1))
                 .andExpect(jsonPath("$.auction.rounds").isArray)
                 .andExpect(jsonPath("$.auction.rounds").isEmpty)
-                .andExpect(jsonPath("$.auction.currentPrices").exists())
                 .andExpect(jsonPath("$.auction.currentPrices").isEmpty)
                 .andExpect(jsonPath("$.auction.finished").value(false))
                 .andDo { result -> logger.info(result.response.contentAsString) }
@@ -91,11 +86,8 @@ class ApiTests {
 
     @Test
     fun `Should get auctions`() {
-        val created1 = created()
-        val id1 = created1.getString("id")
-
-        val created2 = created()
-        val id2 = created2.getString("id")
+        created()
+        created()
 
         mvc.perform(get("/auctions"))
                 .andExpect(status().isOk)
