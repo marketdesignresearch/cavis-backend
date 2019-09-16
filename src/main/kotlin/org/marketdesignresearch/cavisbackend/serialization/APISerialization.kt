@@ -112,6 +112,7 @@ class APISerialization {
             jsonGenerator.writeObjectField("goods", domain.goods)
             if (domain.hasEfficientAllocationCalculated()) {
                 jsonGenerator.writeObjectField("efficientAllocation", domain.efficientAllocation)
+                jsonGenerator.writeNumberField("efficientSocialWelfare", domain.efficientAllocation.trueSocialWelfare)
             }
             jsonGenerator.writeEndObject()
         }
