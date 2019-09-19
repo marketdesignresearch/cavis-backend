@@ -40,7 +40,7 @@ class ApiTests {
                 .andExpect(jsonPath("$.name").value("TestAuction A"))
                 .andExpect(jsonPath("$.seed").isNumber)
                 .andExpect(jsonPath("$.tags").isArray)
-                .andExpect(jsonPath("$.tags").isEmpty)
+                .andExpect(jsonPath("$.tags[0]").value("test-generated"))
                 .andExpect(jsonPath("$.id").isString)
                 .andExpect(jsonPath("$.auctionType").value("SINGLE_ITEM_SECOND_PRICE"))
                 .andExpect(jsonPath("$.auction.domain.bidders[0].id").isString)
@@ -363,6 +363,7 @@ class ApiTests {
                     .put("goods", JSONArray().put(JSONObject().put("name", "item"))))
             .put("auctionType", "SINGLE_ITEM_SECOND_PRICE")
             .put("name", "TestAuction A")
+            .put("tags", JSONArray().put("test-generated"))
 
     private fun created(): JSONObject = JSONObject(mvc.perform(
             post("/auctions/")

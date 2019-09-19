@@ -27,7 +27,8 @@ data class AuctionSetting(
         val auctionType: AuctionFactory,
         val auctionConfig: AuctionConfiguration = AuctionConfiguration(),
         val name: String = "",
-        val seed: Long = System.currentTimeMillis()
+        val seed: Long = System.currentTimeMillis(),
+        val tags: List<String> = emptyList()
 )
 data class JSONBid(val amount: BigDecimal, val bundle: Map<UUID, Int>)
 data class PerRoundRequest(val round: Int)
@@ -49,7 +50,13 @@ class AuctionController(private val auctionWrapperDAO: AuctionWrapperDAO) {
 
     @PostMapping("/auctions", consumes = [MediaType.APPLICATION_JSON_VALUE])
     fun startAuction(@RequestBody body: AuctionSetting): ResponseEntity<AuctionWrapper> {
-        val auctionWrapper = SessionManagement.create(body.domain.toDomain(body.seed), body.auctionType, body.auctionConfig, body.seed, body.name)
+        val auctionWrapper = SessionManagement.create(
+                domain = body.domain.toDomain(body.seed),
+                type = body.auctionType,
+                auctionConfig = body.auctionConfig,
+                seed = body.seed,
+                name = body.name,
+                tags = body.tags)
         if (auctionWrapper.auction.domain.goods.none { it is SATSGood } &&
                 auctionWrapper.auction.domain.bidders.none { it is SATSBidder }) {
             auctionWrapperDAO.save(auctionWrapper)
