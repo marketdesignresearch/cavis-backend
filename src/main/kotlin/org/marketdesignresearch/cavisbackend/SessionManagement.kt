@@ -27,7 +27,8 @@ object SessionManagement {
                 auctionType = type,
                 seed = seed,
                 name = name,
-                tags = tags)
+                tags = tags,
+                auctionConfig = auctionConfig)
         sessions[uuid] = auctionWrapper
         return auctionWrapper
     }

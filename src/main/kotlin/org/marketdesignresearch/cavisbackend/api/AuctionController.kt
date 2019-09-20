@@ -12,6 +12,7 @@ import org.marketdesignresearch.mechlib.core.price.LinearPrices
 import org.marketdesignresearch.mechlib.core.price.Price
 import org.marketdesignresearch.mechlib.mechanism.auctions.IllegalBidException
 import org.marketdesignresearch.mechlib.mechanism.auctions.pvm.PVMAuction
+import org.marketdesignresearch.mechlib.mechanism.auctions.sequential.SequentialAuction
 import org.spectrumauctions.sats.core.model.SATSBidder
 import org.spectrumauctions.sats.core.model.SATSGood
 import org.springframework.data.repository.findByIdOrNull
@@ -151,9 +152,15 @@ class AuctionController(private val auctionWrapperDAO: AuctionWrapperDAO) {
         }
         val result = hashMapOf<String, List<JSONValueQueryResponse>>()
         bidders.forEach { bidder ->
+            var alreadyWon = Bundle.EMPTY
+            if (auction is SequentialAuction) {
+                for (i in 0 until auction.numberOfRounds) {
+                    alreadyWon = alreadyWon.merge(auction.getOutcomeAtRound(i).allocation.allocationOf(bidder).bundle)
+                }
+            }
             val list = arrayListOf<JSONValueQueryResponse>()
             bundles.forEach { bundle ->
-                list.add(JSONValueQueryResponse(bidder.getValue(bundle), bundle))
+                list.add(JSONValueQueryResponse(bidder.getValue(bundle, alreadyWon), bundle))
             }
             result[bidder.id.toString()] = list
         }
