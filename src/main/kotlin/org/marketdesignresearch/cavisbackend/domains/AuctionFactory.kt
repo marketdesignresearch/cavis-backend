@@ -34,11 +34,7 @@ enum class AuctionFactory(val prettyName: String) {
             SINGLE_ITEM_SECOND_PRICE, SIMULTANEOUS_SECOND_PRICE -> Auction(domain, OutcomeRuleGenerator.SECOND_PRICE)
             SEQUENTIAL_FIRST_PRICE -> SequentialAuction(domain, OutcomeRuleGenerator.FIRST_PRICE)
             SEQUENTIAL_SECOND_PRICE -> SequentialAuction(domain, OutcomeRuleGenerator.SECOND_PRICE)
-            VCG -> {
-                val auction = Auction(domain, OutcomeRuleGenerator.VCG_XOR)
-                auction.maxBids = config.maxBids
-                return auction
-            }
+            VCG -> Auction(domain, OutcomeRuleGenerator.VCG_XOR)
             CCA -> {
                 val cca: CCAuction
                 val outcomeRuleGenerator = when (config.ccaConfig.paymentRule) {

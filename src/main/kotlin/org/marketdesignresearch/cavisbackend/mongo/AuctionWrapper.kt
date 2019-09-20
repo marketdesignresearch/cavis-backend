@@ -1,5 +1,6 @@
 package org.marketdesignresearch.cavisbackend.mongo
 
+import org.marketdesignresearch.cavisbackend.api.AuctionConfiguration
 import org.marketdesignresearch.cavisbackend.domains.AuctionFactory
 import org.marketdesignresearch.mechlib.mechanism.auctions.Auction
 import org.springframework.data.annotation.Id
@@ -8,7 +9,6 @@ import org.springframework.data.mongodb.repository.MongoRepository
 import org.springframework.data.mongodb.repository.Query
 import org.springframework.stereotype.Repository
 import java.util.*
-import java.time.ZonedDateTime
 
 @Document
 data class AuctionWrapper(
@@ -19,6 +19,7 @@ data class AuctionWrapper(
         val seed: Long,
         var name: String = "",
         var tags: List<String> = arrayListOf(),
+        var auctionConfig: AuctionConfiguration = AuctionConfiguration(),
         val createdAt: Date = Date(),
         var active: Boolean = true
 )

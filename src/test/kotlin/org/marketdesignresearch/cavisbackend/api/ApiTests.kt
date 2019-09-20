@@ -43,6 +43,7 @@ class ApiTests {
                 .andExpect(jsonPath("$.tags[0]").value("test-generated"))
                 .andExpect(jsonPath("$.id").isString)
                 .andExpect(jsonPath("$.auctionType").value("SINGLE_ITEM_SECOND_PRICE"))
+                .andExpect(jsonPath("$.auctionConfig").exists())
                 .andExpect(jsonPath("$.auction.domain.bidders[0].id").isString)
                 .andExpect(jsonPath("$.auction.domain.bidders[0].name").value("A"))
                 .andExpect(jsonPath("$.auction.domain.bidders[1].id").isString)
