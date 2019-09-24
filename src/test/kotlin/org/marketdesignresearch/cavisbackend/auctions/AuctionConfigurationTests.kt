@@ -1,7 +1,9 @@
-package org.marketdesignresearch.cavisbackend.api
+package org.marketdesignresearch.cavisbackend.auctions
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.marketdesignresearch.cavisbackend.api.AuctionConfiguration
+import org.marketdesignresearch.cavisbackend.api.PaymentRule
 import org.marketdesignresearch.cavisbackend.domains.AdditiveValueDomainWrapper
 import org.marketdesignresearch.cavisbackend.domains.AuctionFactory
 import org.marketdesignresearch.cavisbackend.domains.PerItemBidder

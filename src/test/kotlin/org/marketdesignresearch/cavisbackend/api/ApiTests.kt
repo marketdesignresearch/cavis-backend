@@ -2,26 +2,39 @@ package org.marketdesignresearch.cavisbackend.api
 
 import org.json.JSONArray
 import org.json.JSONObject
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
+import org.springframework.security.test.context.support.WithAnonymousUser
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import org.springframework.test.web.servlet.setup.MockMvcBuilders
+import org.springframework.web.context.WebApplicationContext
 import java.util.*
+
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@WithAnonymousUser
 class ApiTests {
 
     private val logger = LoggerFactory.getLogger(ApiTests::class.java)
 
     @Autowired
+    lateinit var wac: WebApplicationContext
+
     lateinit var mvc: MockMvc
+
+    @BeforeEach
+    fun setup() {
+        this.mvc = MockMvcBuilders.webAppContextSetup(this.wac).build()
+    }
 
     @Test
     fun `Unknown UUID should return 404`() {
@@ -90,7 +103,7 @@ class ApiTests {
         created()
         created()
 
-        mvc.perform(get("/auctions"))
+        mvc.perform(get("/auctions/"))
                 .andExpect(status().isOk)
                 .andExpect(jsonPath("$").isArray)
                 .andDo { result -> logger.info(result.response.contentAsString) }
@@ -135,7 +148,7 @@ class ApiTests {
         // No content
         mvc.perform(post("/auctions/$id/demandquery"))
                 .andExpect(status().isBadRequest)
-                .andDo { result -> logger.info("Request: {} | Response: {}", result.request.contentAsString, result.response.contentAsString) }
+                .andDo { result -> logger.info("Response: {}", result.response.contentAsString) }
 
         // Empty content
         mvc.perform(
@@ -143,7 +156,7 @@ class ApiTests {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
                 .andExpect(status().isOk) // Zero-prices query for all bidders
-                .andDo { result -> logger.info("Request: {} | Response: {}", result.request.contentAsString, result.response.contentAsString) }
+                .andDo { result -> logger.info("Response: {}", result.response.contentAsString) }
 
         mvc.perform(
                 post("/auctions/$id/demandquery")
@@ -159,7 +172,7 @@ class ApiTests {
                 .andExpect(jsonPath("$.$bidder1Uuid[1].entries").isEmpty)
                 .andExpect(jsonPath("$.$bidder1Uuid[2]").doesNotExist())
                 .andExpect(jsonPath("$.$bidder2Uuid").doesNotExist())
-                .andDo { result -> logger.info("Request: {} | Response: {}", result.request.contentAsString, result.response.contentAsString) }
+                .andDo { result -> logger.info("Response: {}", result.response.contentAsString) }
         mvc.perform(
                 post("/auctions/$id/demandquery")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -181,7 +194,7 @@ class ApiTests {
                 .andExpect(jsonPath("$.$bidder2Uuid[1].hash").isString)
                 .andExpect(jsonPath("$.$bidder2Uuid[1].entries").isEmpty)
                 .andExpect(jsonPath("$.$bidder2Uuid[2]").doesNotExist())
-                .andDo { result -> logger.info("Request: {} | Response: {}", result.request.contentAsString, result.response.contentAsString) }
+                .andDo { result -> logger.info("Response: {}", result.response.contentAsString) }
 
         mvc.perform(
                 post("/auctions/$id/demandquery")
@@ -196,7 +209,7 @@ class ApiTests {
                 .andExpect(jsonPath("$.$bidder1Uuid[0].hash").isString)
                 .andExpect(jsonPath("$.$bidder2Uuid[0].entries").isEmpty)
                 .andExpect(jsonPath("$.$bidder2Uuid[1]").doesNotExist())
-                .andDo { result -> logger.info("Request: {} | Response: {}", result.request.contentAsString, result.response.contentAsString) }
+                .andDo { result -> logger.info("Response: {}", result.response.contentAsString) }
     }
 
     @Test
@@ -214,7 +227,7 @@ class ApiTests {
 
         // No content
         mvc.perform(post("/auctions/$id/valuequery"))
-                .andDo { result -> logger.info("Request: {} | Response: {}", result.request.contentAsString, result.response.contentAsString) }
+                .andDo { result -> logger.info("Response: {}", result.response.contentAsString) }
                 .andExpect(status().isBadRequest)
 
         // Empty content
@@ -222,14 +235,14 @@ class ApiTests {
                 post("/auctions/$id/valuequery")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
-                .andDo { result -> logger.info("Request: {} | Response: {}", result.request.contentAsString, result.response.contentAsString) }
+                .andDo { result -> logger.info("Response: {}", result.response.contentAsString) }
                 .andExpect(status().isBadRequest)
 
         mvc.perform(
                 post("/auctions/$id/valuequery")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(valueQueryContent.toString()))
-                .andDo { result -> logger.info("Request: {} | Response: {}", result.request.contentAsString, result.response.contentAsString) }
+                .andDo { result -> logger.info("Response: {}", result.response.contentAsString) }
                 .andExpect(status().isOk)
                 .andExpect(jsonPath("$.$bidder1Uuid").isArray)
                 .andExpect(jsonPath("$.$bidder1Uuid[0].value").isNumber)
@@ -247,13 +260,13 @@ class ApiTests {
                 .andExpect(status().isOk)
                 .andExpect(jsonPath("$.$bidder1Uuid").isArray)
                 .andExpect(jsonPath("$.$bidder2Uuid").isArray)
-                .andDo { result -> logger.info("Request: {} | Response: {}", result.request.contentAsString, result.response.contentAsString) }
+                .andDo { result -> logger.info("Response: {}", result.response.contentAsString) }
 
         mvc.perform(
                 post("/auctions/$id/valuequery")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"bundles\": []}"))
-                .andDo { result -> logger.info("Request: {} | Response: {}", result.request.contentAsString, result.response.contentAsString) }
+                .andDo { result -> logger.info("Response: {}", result.response.contentAsString) }
                 .andExpect(status().isOk)
                 .andExpect(jsonPath("$.$bidder1Uuid").isArray)
                 .andExpect(jsonPath("$.$bidder1Uuid").isEmpty)
@@ -273,13 +286,13 @@ class ApiTests {
                 post("/auctions/$id/bids")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(bids(bidder1Uuid, bidder2Uuid, itemUuid).toString()))
-                .andDo { logger.info("Request: {} | Response: {}", it.request.contentAsString, it.response.contentAsString) }
+                .andDo { logger.info("Response: {}", it.response.contentAsString) }
                 .andExpect(status().isOk)
                 .andExpect(jsonPath("$.id").value(id))
                 .andExpect(jsonPath("$.auction.rounds").isEmpty)
 
         mvc.perform(post("/auctions/$id/close-round"))
-                .andDo { logger.info("Request: {} | Response: {}", it.request.contentAsString, it.response.contentAsString) }
+                .andDo { logger.info("Response: {}", it.response.contentAsString) }
                 .andExpect(status().isOk)
                 .andExpect(jsonPath("$.id").value(id))
                 .andExpect(jsonPath("$.auction.rounds").isNotEmpty)
@@ -311,7 +324,7 @@ class ApiTests {
         }
 
         mvc.perform(get("/auctions/$id/"))
-                .andDo { logger.info("Request: {} | Response: {}", it.request.contentAsString, it.response.contentAsString) }
+                .andDo { logger.info("Response: {}", it.response.contentAsString) }
                 .andExpect(status().isOk)
                 .andExpect(jsonPath("$.auction.rounds").isNotEmpty)
                 .andExpect(jsonPath("$.auction.rounds").isArray)
@@ -325,12 +338,12 @@ class ApiTests {
                 put("/auctions/$id/reset")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"round\": 3}"))
-                .andDo { logger.info("Request: {} | Response: {}", it.request.contentAsString, it.response.contentAsString) }
+                .andDo { logger.info("Response: {}", it.response.contentAsString) }
                 .andExpect(status().isOk)
                 .andExpect(jsonPath("$").isArray)
 
         mvc.perform(get("/auctions/$id/"))
-                .andDo { logger.info("Request: {} | Response: {}", it.request.contentAsString, it.response.contentAsString) }
+                .andDo { logger.info("Response: {}", it.response.contentAsString) }
                 .andExpect(status().isOk)
                 .andExpect(jsonPath("$.auction.rounds").isNotEmpty)
                 .andExpect(jsonPath("$.auction.rounds").isArray)
@@ -344,8 +357,8 @@ class ApiTests {
 
     @Test
     fun `Should get result`() {
-        mvc.perform(get("/auctions/${finished()}/result"))
-                .andDo { result -> logger.info("Request: {} | Response: {}", result.request.contentAsString, result.response.contentAsString) }
+        mvc.perform(get("/auctions/${finished()}/result/"))
+                .andDo { result -> logger.info("Response: {}", result.response.contentAsString) }
                 .andExpect(status().isOk)
                 .andExpect(jsonPath("$.socialWelfare").value(12))
                 .andExpect(jsonPath("$.revenue").value(10))
@@ -370,6 +383,7 @@ class ApiTests {
             post("/auctions/")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(body().toString()))
+            .andDo { logger.info(it.response.contentAsString)}
             .andReturn().response.contentAsString)
 
     private fun bids(bidder1Uuid: String, bidder2Uuid: String, itemUuid: String): JSONObject = JSONObject()

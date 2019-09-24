@@ -16,12 +16,18 @@ import org.marketdesignresearch.mechlib.mechanism.auctions.sequential.Sequential
 import org.spectrumauctions.sats.core.model.SATSBidder
 import org.spectrumauctions.sats.core.model.SATSGood
 import org.springframework.data.repository.findByIdOrNull
+import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
+import org.springframework.security.core.annotation.AuthenticationPrincipal
+import org.springframework.security.core.context.SecurityContextHolder
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken
 import org.springframework.web.bind.annotation.*
 import java.math.BigDecimal
 import java.util.*
 import kotlin.collections.HashSet
+
+
 
 data class AuctionSetting(
         val domain: DomainWrapper,
@@ -29,7 +35,8 @@ data class AuctionSetting(
         val auctionConfig: AuctionConfiguration = AuctionConfiguration(),
         val name: String = "",
         val seed: Long = System.currentTimeMillis(),
-        val tags: List<String> = emptyList()
+        val tags: List<String> = emptyList(),
+        val private: Boolean = false
 )
 data class JSONBid(val amount: BigDecimal, val bundle: Map<UUID, Int>)
 data class PerRoundRequest(val round: Int)
@@ -43,92 +50,125 @@ data class AuctionListItem(val id: UUID, val name: String, val createdAt: Date, 
     constructor(aw: AuctionWrapper) : this(aw.id, aw.name, aw.createdAt, aw.auction.domain.name, aw.auctionType.prettyName, aw.auction.domain.bidders.size, aw.auction.domain.goods.size, aw.auction.numberOfRounds, aw.seed, aw.tags)
 }
 
-data class AuctionEdit(val name: String?, val tags: List<String>?)
+data class AuctionEdit(val name: String?, val tags: List<String>?, val private: Boolean?)
 
 @CrossOrigin(origins = ["*"])
 @RestController
+@RequestMapping("/auctions")
 class AuctionController(private val auctionWrapperDAO: AuctionWrapperDAO) {
 
-    @PostMapping("/auctions", consumes = [MediaType.APPLICATION_JSON_VALUE])
-    fun startAuction(@RequestBody body: AuctionSetting): ResponseEntity<AuctionWrapper> {
-        val auctionWrapper = SessionManagement.create(
-                domain = body.domain.toDomain(body.seed),
-                type = body.auctionType,
-                auctionConfig = body.auctionConfig,
-                seed = body.seed,
-                name = body.name,
-                tags = body.tags)
+    private fun save(auctionWrapper: AuctionWrapper) {
         if (auctionWrapper.auction.domain.goods.none { it is SATSGood } &&
                 auctionWrapper.auction.domain.bidders.none { it is SATSBidder }) {
             auctionWrapperDAO.save(auctionWrapper)
         }
+    }
+
+    private fun hasAccess(auctionWrapper: AuctionWrapper) : Boolean {
+        val auth = SecurityContextHolder.getContext().authentication
+        if (auth != null && auth.authorities.map{it.authority}.contains("ROLE_IDENTIFIED")) {
+            return !auctionWrapper.private || auctionWrapper.owners.contains(auth.name)
+        }
+        return !auctionWrapper.private
+    }
+
+    private fun filter(auctionWrappers: Collection<AuctionWrapper>): Collection<AuctionWrapper> {
+        val auth = SecurityContextHolder.getContext().authentication
+        if (auth != null && auth.authorities.map{it.authority}.contains("ROLE_IDENTIFIED")) {
+            return auctionWrappers.filter { !it.private || it.owners.contains(auth.name) }
+        }
+        return auctionWrappers.filter { !it.private }
+    }
+
+    @PostMapping("/", consumes = [MediaType.APPLICATION_JSON_VALUE])
+    fun startAuction(@RequestBody body: AuctionSetting): ResponseEntity<AuctionWrapper> {
+        val auth = SecurityContextHolder.getContext().authentication
+        val auctionWrapper = if (auth != null && auth.authorities.map{it.authority}.contains("ROLE_IDENTIFIED")) {
+            SessionManagement.create(
+                    domain = body.domain.toDomain(body.seed),
+                    type = body.auctionType,
+                    auctionConfig = body.auctionConfig,
+                    seed = body.seed,
+                    name = body.name,
+                    tags = body.tags,
+                    private = body.private,
+                    owners = listOf(auth.name))
+        } else {
+            SessionManagement.create(
+                    domain = body.domain.toDomain(body.seed),
+                    type = body.auctionType,
+                    auctionConfig = body.auctionConfig,
+                    seed = body.seed,
+                    name = body.name,
+                    tags = body.tags)
+        }
+        save(auctionWrapper)
         return ResponseEntity.ok(auctionWrapper)
     }
 
-    @GetMapping("/auctions")
-    fun getAuctions(): ResponseEntity<List<AuctionListItem>> {
-        return ResponseEntity.ok(SessionManagement.get().map { AuctionListItem(it) })
+    @GetMapping("/")
+    fun getAuctions(@AuthenticationPrincipal principal: Any): ResponseEntity<List<AuctionListItem>> {
+        val auth = SecurityContextHolder.getContext().authentication
+        return ResponseEntity.ok(filter(SessionManagement.get()).map { AuctionListItem(it) })
     }
 
-    @GetMapping("/auctions/archived")
+    @GetMapping("/archived")
     fun getArchivedAuctions(): ResponseEntity<List<AuctionListItem>> {
         val auctionWrappers = auctionWrapperDAO.findAllActiveIsFalseWithoutSATS()
-        return ResponseEntity.ok(auctionWrappers.map { AuctionListItem(it) })
+        return ResponseEntity.ok(filter(auctionWrappers).map { AuctionListItem(it) })
     }
 
-    @GetMapping("/auctions/{uuid}")
+    @GetMapping("/{uuid}")
     fun getAuction(@PathVariable uuid: UUID): ResponseEntity<AuctionWrapper?> {
         val auctionWrapper = SessionManagement.get(uuid) ?: run {
             val inDB = auctionWrapperDAO.findByIdWithoutSATS(uuid)
-            if (inDB != null) {
+            if (inDB != null && hasAccess(inDB)) {
                 SessionManagement.load(inDB)
                 inDB.active = true
-                if (inDB.auction.domain.goods.none { it is SATSGood } &&
-                        inDB.auction.domain.bidders.none { it is SATSBidder }) {
-                    auctionWrapperDAO.save(inDB)
-                }
+                save(inDB)
             }
             inDB
         }
+        if (auctionWrapper != null && !hasAccess(auctionWrapper)) return ResponseEntity.status(HttpStatus.FORBIDDEN).build()
         return ResponseEntity.of(Optional.ofNullable(auctionWrapper))
     }
 
-    @DeleteMapping("/auctions/{uuid}")
+    @DeleteMapping("/{uuid}")
     fun deleteAuction(@PathVariable uuid: UUID): ResponseEntity<Any> {
+        val auctionWrapper = SessionManagement.get(uuid)
+        if (auctionWrapper != null && !hasAccess(auctionWrapper)) return ResponseEntity.status(HttpStatus.FORBIDDEN).build()
         val success = SessionManagement.delete(uuid)
         val inDB = auctionWrapperDAO.findByIdOrNull(uuid)
-        if (inDB != null) auctionWrapperDAO.delete(inDB)
+        if (inDB != null && hasAccess(inDB)) auctionWrapperDAO.delete(inDB)
         if (!success && inDB == null) return ResponseEntity.notFound().build()
         return ResponseEntity.noContent().build()
     }
 
-    @PostMapping("/auctions/{uuid}/archive")
+    @PostMapping("/{uuid}/archive")
     fun archiveAuction(@PathVariable uuid: UUID): ResponseEntity<Any> {
         val auctionWrapper = SessionManagement.get(uuid) ?: return ResponseEntity.notFound().build()
+        if (!hasAccess(auctionWrapper)) return ResponseEntity.status(HttpStatus.FORBIDDEN).build()
         SessionManagement.delete(uuid)
-        auctionWrapper.active = false;
-        if (auctionWrapper.auction.domain.goods.none { it is SATSGood } &&
-                auctionWrapper.auction.domain.bidders.none { it is SATSBidder }) {
-            auctionWrapperDAO.save(auctionWrapper)
-        }
+        auctionWrapper.active = false
+        save(auctionWrapper)
         return ResponseEntity.noContent().build()
     }
 
-    @PatchMapping("/auctions/{uuid}")
+    @PatchMapping("/{uuid}")
     fun patchAuction(@PathVariable uuid: UUID, @RequestBody body: AuctionEdit): ResponseEntity<AuctionWrapper> {
         val auctionWrapper = SessionManagement.get(uuid) ?: return ResponseEntity.notFound().build()
+        if (!hasAccess(auctionWrapper)) return ResponseEntity.status(HttpStatus.FORBIDDEN).build()
         if (body.name != null) auctionWrapper.name = body.name
         if (body.tags != null) auctionWrapper.tags = body.tags
-        if (auctionWrapper.auction.domain.goods.none { it is SATSGood } &&
-                auctionWrapper.auction.domain.bidders.none { it is SATSBidder }) {
-            auctionWrapperDAO.save(auctionWrapper)
-        }
+        if (body.private != null) auctionWrapper.private = body.private
+        save(auctionWrapper)
         return ResponseEntity.ok(auctionWrapper)
     }
 
-    @PostMapping("/auctions/{uuid}/demandquery")
+    @PostMapping("/{uuid}/demandquery")
     fun postDemandQuery(@PathVariable uuid: UUID, @RequestBody body: JSONDemandQuery): ResponseEntity<Map<String, List<Bundle>>> {
         val auctionWrapper = SessionManagement.get(uuid) ?: return ResponseEntity.notFound().build()
+        if (!hasAccess(auctionWrapper)) return ResponseEntity.status(HttpStatus.FORBIDDEN).build()
         val auction = auctionWrapper.auction
         val priceMap = hashMapOf<Good, Price>()
         body.prices.forEach { priceMap[auction.getGood(it.key)] = Price.of(it.value) }
@@ -139,9 +179,10 @@ class AuctionController(private val auctionWrapperDAO: AuctionWrapperDAO) {
         return ResponseEntity.ok(result)
     }
 
-    @PostMapping("/auctions/{uuid}/valuequery")
+    @PostMapping("/{uuid}/valuequery")
     fun postValueQuery(@PathVariable uuid: UUID, @RequestBody body: JSONValueQuery): ResponseEntity<Map<String, List<JSONValueQueryResponse>>> {
         val auctionWrapper = SessionManagement.get(uuid) ?: return ResponseEntity.notFound().build()
+        if (!hasAccess(auctionWrapper)) return ResponseEntity.status(HttpStatus.FORBIDDEN).build()
         val auction = auctionWrapper.auction
         val bidders = if (body.bidders.isEmpty()) auction.domain.bidders else body.bidders.map { auction.getBidder(it) }
         val bundles = arrayListOf<Bundle>()
@@ -168,9 +209,10 @@ class AuctionController(private val auctionWrapperDAO: AuctionWrapperDAO) {
         return ResponseEntity.ok(result)
     }
 
-    @PostMapping("/auctions/{uuid}/inferredvaluequery")
+    @PostMapping("/{uuid}/inferredvaluequery")
     fun postInferredValueQuery(@PathVariable uuid: UUID, @RequestBody body: JSONInferredValueQuery): ResponseEntity<JSONInferredValueQueryResponse> {
         val auctionWrapper = SessionManagement.get(uuid) ?: return ResponseEntity.notFound().build()
+        if (!hasAccess(auctionWrapper)) return ResponseEntity.status(HttpStatus.FORBIDDEN).build()
         val auction = auctionWrapper.auction
         if (auction !is PVMAuction) return ResponseEntity.badRequest().build()
         val bidder = auction.getBidder(body.bidder)
@@ -184,9 +226,10 @@ class AuctionController(private val auctionWrapperDAO: AuctionWrapperDAO) {
         return ResponseEntity.ok(JSONInferredValueQueryResponse(result))
     }
 
-    @PostMapping("/auctions/{uuid}/bids", consumes = [MediaType.APPLICATION_JSON_VALUE])
+    @PostMapping("/{uuid}/bids", consumes = [MediaType.APPLICATION_JSON_VALUE])
     fun addBids(@PathVariable uuid: UUID, @RequestBody bidderBids: Map<UUID, Set<JSONBid>>): ResponseEntity<Any> {
         val auctionWrapper = SessionManagement.get(uuid) ?: return ResponseEntity.notFound().build()
+        if (!hasAccess(auctionWrapper)) return ResponseEntity.status(HttpStatus.FORBIDDEN).build()
         val auction = auctionWrapper.auction
         val bids = Bids()
         bidderBids.forEach { (bidderId, jsonBids) ->
@@ -205,61 +248,53 @@ class AuctionController(private val auctionWrapperDAO: AuctionWrapperDAO) {
         } catch (e: IllegalBidException) {
             return ResponseEntity.badRequest().body(e.message)
         }
-        if (auctionWrapper.auction.domain.goods.none { it is SATSGood } &&
-                auctionWrapper.auction.domain.bidders.none { it is SATSBidder }) {
-            auctionWrapperDAO.save(auctionWrapper)
-        }
+        save(auctionWrapper)
         return ResponseEntity.ok(auctionWrapper)
     }
 
-    @PostMapping("/auctions/{uuid}/propose", consumes = [])
+    @PostMapping("/{uuid}/propose", consumes = [])
     fun proposeBids(@PathVariable uuid: UUID, @RequestBody body: ArrayList<UUID>?): ResponseEntity<Bids> {
         val auctionWrapper = SessionManagement.get(uuid) ?: return ResponseEntity.notFound().build()
+        if (!hasAccess(auctionWrapper)) return ResponseEntity.status(HttpStatus.FORBIDDEN).build()
         val auction = auctionWrapper.auction
         val uuids = body ?: arrayListOf()
         if (uuids.isEmpty()) uuids.addAll(auction.domain.bidders.map { it.id })
         val bids = Bids()
         uuids.forEach { bids.setBid(auction.getBidder(it), auction.proposeBid(auction.getBidder(it))) }
-        if (auctionWrapper.auction.domain.goods.none { it is SATSGood } &&
-                auctionWrapper.auction.domain.bidders.none { it is SATSBidder }) {
-            auctionWrapperDAO.save(auctionWrapper)
-        }
+        save(auctionWrapper)
         return ResponseEntity.ok(bids)
     }
 
-    @PostMapping("/auctions/{uuid}/close-round", consumes = [])
+    @PostMapping("/{uuid}/close-round", consumes = [])
     fun closeRound(@PathVariable uuid: UUID): ResponseEntity<AuctionWrapper> {
         val auctionWrapper = SessionManagement.get(uuid) ?: return ResponseEntity.notFound().build()
+        if (!hasAccess(auctionWrapper)) return ResponseEntity.status(HttpStatus.FORBIDDEN).build()
         val auction = auctionWrapper.auction
         auction.closeRound()
         // TODO: For now, we get result directly. I'll have to think about whether
         //  I should make this the default in the MechLib, as for most auctions the result will be quickly available
         auction.getOutcomeAtRound(auction.numberOfRounds - 1)
-        if (auctionWrapper.auction.domain.goods.none { it is SATSGood } &&
-                auctionWrapper.auction.domain.bidders.none { it is SATSBidder }) {
-            auctionWrapperDAO.save(auctionWrapper)
-        }
+        save(auctionWrapper)
         return ResponseEntity.ok(auctionWrapper)
     }
 
-    @PostMapping("/auctions/{uuid}/advance-round", consumes = [])
+    @PostMapping("/{uuid}/advance-round", consumes = [])
     fun advanceRound(@PathVariable uuid: UUID): ResponseEntity<AuctionWrapper> {
         val auctionWrapper = SessionManagement.get(uuid) ?: return ResponseEntity.notFound().build()
+        if (!hasAccess(auctionWrapper)) return ResponseEntity.status(HttpStatus.FORBIDDEN).build()
         val auction = auctionWrapper.auction
         auction.advanceRound()
         // TODO: For now, we get result directly. I'll have to think about whether
         //  I should make this the default in the MechLib, as for most auctions the result will be quickly available
         auction.getOutcomeAtRound(auction.numberOfRounds - 1)
-        if (auctionWrapper.auction.domain.goods.none { it is SATSGood } &&
-                auctionWrapper.auction.domain.bidders.none { it is SATSBidder }) {
-            auctionWrapperDAO.save(auctionWrapper)
-        }
+        save(auctionWrapper)
         return ResponseEntity.ok(auctionWrapper)
     }
 
-    @PostMapping("/auctions/{uuid}/advance-phase", consumes = [])
+    @PostMapping("/{uuid}/advance-phase", consumes = [])
     fun advancePhase(@PathVariable uuid: UUID): ResponseEntity<AuctionWrapper> {
         val auctionWrapper = SessionManagement.get(uuid) ?: return ResponseEntity.notFound().build()
+        if (!hasAccess(auctionWrapper)) return ResponseEntity.status(HttpStatus.FORBIDDEN).build()
         val auction = auctionWrapper.auction
         if (auction.currentPhaseFinished()) auction.advanceRound() // Step out of the "finished" round
         while (!auction.currentPhaseFinished()) {
@@ -268,16 +303,14 @@ class AuctionController(private val auctionWrapperDAO: AuctionWrapperDAO) {
         // TODO: For now, we get result directly. I'll have to think about whether
         //  I should make this the default in the MechLib, as for most auctions the result will be quickly available
         auction.getOutcomeAtRound(auction.numberOfRounds - 1)
-        if (auctionWrapper.auction.domain.goods.none { it is SATSGood } &&
-                auctionWrapper.auction.domain.bidders.none { it is SATSBidder }) {
-            auctionWrapperDAO.save(auctionWrapper)
-        }
+        save(auctionWrapper)
         return ResponseEntity.ok(auctionWrapper)
     }
 
-    @PostMapping("/auctions/{uuid}/finish", consumes = [])
+    @PostMapping("/{uuid}/finish", consumes = [])
     fun finish(@PathVariable uuid: UUID): ResponseEntity<AuctionWrapper> {
         val auctionWrapper = SessionManagement.get(uuid) ?: return ResponseEntity.notFound().build()
+        if (!hasAccess(auctionWrapper)) return ResponseEntity.status(HttpStatus.FORBIDDEN).build()
         val auction = auctionWrapper.auction
         while (!auction.finished()) {
             auction.advanceRound()
@@ -285,52 +318,43 @@ class AuctionController(private val auctionWrapperDAO: AuctionWrapperDAO) {
         // TODO: For now, we get result directly. I'll have to think about whether
         //  I should make this the default in the MechLib, as for most auctions the result will be quickly available
         auction.getOutcomeAtRound(auction.numberOfRounds - 1)
-        if (auctionWrapper.auction.domain.goods.none { it is SATSGood } &&
-                auctionWrapper.auction.domain.bidders.none { it is SATSBidder }) {
-            auctionWrapperDAO.save(auctionWrapper)
-        }
+        save(auctionWrapper)
         return ResponseEntity.ok(auctionWrapper)
     }
 
-    @PutMapping("/auctions/{uuid}/reset")
+    @PutMapping("/{uuid}/reset")
     fun resetAuction(@PathVariable uuid: UUID, @RequestBody body: PerRoundRequest): ResponseEntity<Bids> {
         val auctionWrapper = SessionManagement.get(uuid) ?: return ResponseEntity.notFound().build()
+        if (!hasAccess(auctionWrapper)) return ResponseEntity.status(HttpStatus.FORBIDDEN).build()
         return try {
             val bids = auctionWrapper.auction.getBidsAt(body.round)
             auctionWrapper.auction.resetToRound(body.round)
-            if (auctionWrapper.auction.domain.goods.none { it is SATSGood } &&
-                    auctionWrapper.auction.domain.bidders.none { it is SATSBidder }) {
-                auctionWrapperDAO.save(auctionWrapper)
-            }
+            save(auctionWrapper)
             ResponseEntity.ok(bids)
         } catch (e: IllegalArgumentException) {
             ResponseEntity.badRequest().build()
         }
     }
 
-    @GetMapping("/auctions/{uuid}/result")
+    @GetMapping("/{uuid}/result")
     fun getResult(@PathVariable uuid: UUID): ResponseEntity<Outcome> {
         val auctionWrapper = SessionManagement.get(uuid) ?: return ResponseEntity.notFound().build()
+        if (!hasAccess(auctionWrapper)) return ResponseEntity.status(HttpStatus.FORBIDDEN).build()
         val outcome = auctionWrapper.auction.outcome
-        if (auctionWrapper.auction.domain.goods.none { it is SATSGood } &&
-                auctionWrapper.auction.domain.bidders.none { it is SATSBidder }) {
-            auctionWrapperDAO.save(auctionWrapper)
-        }
+        save(auctionWrapper)
         return ResponseEntity.ok(outcome)
     }
 
-    @GetMapping("/auctions/{uuid}/rounds/{round}/result")
+    @GetMapping("/{uuid}/rounds/{round}/result")
     fun getResult(@PathVariable uuid: UUID, @PathVariable round: Int): ResponseEntity<Outcome> {
         val auctionWrapper = SessionManagement.get(uuid) ?: return ResponseEntity.notFound().build()
+        if (!hasAccess(auctionWrapper)) return ResponseEntity.status(HttpStatus.FORBIDDEN).build()
         val mechanismResult = try {
             auctionWrapper.auction.getOutcomeAtRound(round)
         } catch (e: IllegalArgumentException) {
             return ResponseEntity.badRequest().build()
         }
-        if (auctionWrapper.auction.domain.goods.none { it is SATSGood } &&
-                auctionWrapper.auction.domain.bidders.none { it is SATSBidder }) {
-            auctionWrapperDAO.save(auctionWrapper)
-        }
+        save(auctionWrapper)
         return ResponseEntity.ok(mechanismResult)
     }
 }

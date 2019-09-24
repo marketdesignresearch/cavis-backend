@@ -5,6 +5,7 @@ import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -16,6 +17,8 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import org.springframework.test.web.servlet.setup.MockMvcBuilders
+import org.springframework.web.context.WebApplicationContext
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -24,7 +27,14 @@ class CCAApiTests {
     private val logger = LoggerFactory.getLogger(CCAApiTests::class.java)
 
     @Autowired
+    lateinit var wac: WebApplicationContext
+
     lateinit var mvc: MockMvc
+
+    @BeforeEach
+    fun setup() {
+        this.mvc = MockMvcBuilders.webAppContextSetup(this.wac).build()
+    }
 
     val body: JSONObject = JSONObject()
             .put("domain", JSONObject()
@@ -73,7 +83,7 @@ class CCAApiTests {
         mvc.perform(get("/auctions/$id"))
                 .andExpect(status().isOk)
                 .andDo {
-                    logger.info("Request: {} | Response: {}", it.request.contentAsString, it.response.contentAsString)
+                    logger.info("Response: {}", it.response.contentAsString)
                     assertThat(content).isEqualTo(it.response.contentAsString)
                 }
                 .andExpect(jsonPath("$.id").exists())
@@ -110,13 +120,13 @@ class CCAApiTests {
                         .content(JSONObject()
                                 .put(bidder1Id, JSONArray().put(JSONObject().put("amount", 2).put("bundle", JSONObject().put(item2Id, 1))))
                                 .put(bidder2Id, JSONArray().put(JSONObject().put("amount", 3).put("bundle", JSONObject().put(item1Id, 1)))).toString()))
-                .andDo { logger.info("Request: {} | Response: {}", it.request.contentAsString, it.response.contentAsString) }
+                .andDo { logger.info("Response: {}", it.response.contentAsString) }
                 .andExpect(status().isOk)
                 .andExpect(jsonPath("$.id").value(id!!))
                 .andExpect(jsonPath("$.auction.rounds").isEmpty)
 
         mvc.perform(post("/auctions/$id/close-round"))
-                .andDo { logger.info("Request: {} | Response: {}", it.request.contentAsString, it.response.contentAsString) }
+                .andDo { logger.info("Response: {}", it.response.contentAsString) }
                 .andExpect(status().isOk)
                 .andExpect(jsonPath("$.id").value(id!!))
                 .andExpect(jsonPath("$.auction.currentRoundType").value("Supplementary Round"))
@@ -150,7 +160,7 @@ class CCAApiTests {
                 .andDo {id = JSONObject(it.response.contentAsString).getString("id") }
 
         val afterPhase = mvc.perform(post("/auctions/$id/advance-phase"))
-                .andDo { logger.info("Request: {} | Response: {}", it.request.contentAsString, it.response.contentAsString) }
+                .andDo { logger.info("Response: {}", it.response.contentAsString) }
                 .andExpect(status().isOk)
                 .andReturn().response.contentAsString
 
@@ -161,7 +171,7 @@ class CCAApiTests {
         assertThat(afterPhase).isEqualTo(check)
 
         val finished = mvc.perform(post("/auctions/$id/finish"))
-                .andDo { logger.info("Request: {} | Response: {}", it.request.contentAsString, it.response.contentAsString) }
+                .andDo { logger.info("Response: {}", it.response.contentAsString) }
                 .andExpect(status().isOk)
                 .andReturn().response.contentAsString
 
@@ -183,7 +193,7 @@ class CCAApiTests {
                 .andDo {id = JSONObject(it.response.contentAsString).getString("id") }
 
         val finished = mvc.perform(post("/auctions/$id/finish"))
-                .andDo { logger.info("Request: {} | Response: {}", it.request.contentAsString, it.response.contentAsString) }
+                .andDo { logger.info("Response: {}", it.response.contentAsString) }
                 .andExpect(status().isOk)
                 .andReturn().response.contentAsString
 

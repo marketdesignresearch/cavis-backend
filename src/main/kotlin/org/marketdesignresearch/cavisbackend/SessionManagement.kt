@@ -17,7 +17,9 @@ object SessionManagement {
                auctionConfig: AuctionConfiguration,
                seed: Long,
                name: String = "",
-               tags: List<String> = emptyList()
+               tags: List<String> = emptyList(),
+               private: Boolean = false,
+               owners: List<String> = emptyList()
     ): AuctionWrapper {
         val uuid = UUID.randomUUID()
         val auction = type.getAuction(domain, auctionConfig)
@@ -28,7 +30,9 @@ object SessionManagement {
                 seed = seed,
                 name = name,
                 tags = tags,
-                auctionConfig = auctionConfig)
+                auctionConfig = auctionConfig,
+                private = private,
+                owners = owners)
         sessions[uuid] = auctionWrapper
         return auctionWrapper
     }

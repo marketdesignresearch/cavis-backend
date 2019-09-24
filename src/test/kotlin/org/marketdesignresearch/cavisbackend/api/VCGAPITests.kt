@@ -2,6 +2,7 @@ package org.marketdesignresearch.cavisbackend.api
 
 import org.json.JSONArray
 import org.json.JSONObject
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -12,6 +13,8 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import org.springframework.test.web.servlet.setup.MockMvcBuilders
+import org.springframework.web.context.WebApplicationContext
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -20,7 +23,15 @@ class VCGAPITests {
     private val logger = LoggerFactory.getLogger(VCGAPITests::class.java)
 
     @Autowired
+    lateinit var wac: WebApplicationContext
+
     lateinit var mvc: MockMvc
+
+    @BeforeEach
+    fun setup() {
+        this.mvc = MockMvcBuilders.webAppContextSetup(this.wac).build()
+    }
+
     @Test
     fun `Should create new VCG auction`() {
 
@@ -28,7 +39,7 @@ class VCGAPITests {
                 post("/auctions/")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body().toString()))
-                .andDo { logger.info("Request: {} | Response: {}", it.request.contentAsString, it.response.contentAsString) }
+                .andDo { logger.info("Response: {}", it.response.contentAsString) }
                 .andExpect(status().isOk)
                 .andExpect(jsonPath("$.id").exists())
                 .andExpect(jsonPath("$.id").isString)
@@ -68,13 +79,13 @@ class VCGAPITests {
                                 .put(b1Id, JSONArray().put(JSONObject().put("amount", 10).put("bundle", JSONObject().put(AId, 1))))
                                 .put(b2Id, JSONArray().put(JSONObject().put("amount", 10).put("bundle", JSONObject().put(BId, 1))))
                                 .put(b3Id, JSONArray().put(JSONObject().put("amount", 12).put("bundle", JSONObject().put(AId, 1).put(BId, 1)))).toString()))
-                .andDo { logger.info("Request: {} | Response: {}", it.request.contentAsString, it.response.contentAsString) }
+                .andDo { logger.info("Response: {}", it.response.contentAsString) }
                 .andExpect(status().isOk)
                 .andExpect(jsonPath("$.id").value(id))
                 .andExpect(jsonPath("$.auction.rounds").isEmpty)
 
         mvc.perform(post("/auctions/$id/close-round"))
-                .andDo { logger.info("Request: {} | Response: {}", it.request.contentAsString, it.response.contentAsString) }
+                .andDo { logger.info("Response: {}", it.response.contentAsString) }
                 .andExpect(status().isOk)
                 .andExpect(jsonPath("$.id").value(id))
                 .andExpect(jsonPath("$.auction.rounds[0].outcome.allocation.$b1Id.value").value(10))
@@ -102,14 +113,14 @@ class VCGAPITests {
 
         val bids = mvc.perform(
                 post("/auctions/$id/propose"))
-                .andDo { logger.info("Request: {} | Response: {}", it.request.contentAsString, it.response.contentAsString) }
+                .andDo { logger.info("Response: {}", it.response.contentAsString) }
                 .andExpect(status().isOk)
                 .andReturn().response.contentAsString
 
         val bidArray = JSONArray(bids)
 
         mvc.perform(post("/auctions/$id/finish"))
-                .andDo { logger.info("Request: {} | Response: {}", it.request.contentAsString, it.response.contentAsString) }
+                .andDo { logger.info("Response: {}", it.response.contentAsString) }
                 .andExpect(status().isOk)
                 .andExpect(jsonPath("$.id").value(id))
                 .andExpect(jsonPath("$.auction.rounds[0].outcome.allocation.$b2Id.value").value(4))

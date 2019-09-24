@@ -3,6 +3,7 @@ package org.marketdesignresearch.cavisbackend.api
 import org.assertj.core.api.Assertions.assertThat
 import org.json.JSONException
 import org.json.JSONObject
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.TestFactory
 import org.slf4j.LoggerFactory
@@ -15,6 +16,8 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import org.springframework.test.web.servlet.setup.MockMvcBuilders
+import org.springframework.web.context.WebApplicationContext
 import java.util.stream.Stream
 
 @SpringBootTest
@@ -24,7 +27,14 @@ class AllDomainsAllAuctionsTest {
     private val logger = LoggerFactory.getLogger(AllDomainsAllAuctionsTest::class.java)
 
     @Autowired
+    lateinit var wac: WebApplicationContext
+
     lateinit var mvc: MockMvc
+
+    @BeforeEach
+    fun setup() {
+        this.mvc = MockMvcBuilders.webAppContextSetup(this.wac).build()
+    }
 
     @TestFactory
     fun `Dynamically testing all auction types in all domains`(): Stream<DynamicTest> {
@@ -93,20 +103,20 @@ class AllDomainsAllAuctionsTest {
                                     .andExpect(jsonPath("$.auction.rounds").isArray)
                                     .andExpect(jsonPath("$.auction.rounds").isEmpty)
                                     .andDo {
-                                        logger.info("Request: {} | Response: {}", it.request.contentAsString, it.response.contentAsString)
+                                        logger.info("Response: {}", it.response.contentAsString)
                                         assertThat(content).isEqualTo(it.response.contentAsString)
                                     }
 
                             if (!bigDomain) {
                                 mvc.perform(post("/auctions/$id/finish"))
-                                        .andDo { logger.info("Request: {} | Response: {}", it.request.contentAsString, it.response.contentAsString) }
+                                        .andDo { logger.info("Response: {}", it.response.contentAsString) }
                                         .andExpect(status().isOk)
                                         .andExpect(jsonPath("$.id").value(id!!))
                                         .andExpect(jsonPath("$.auction.rounds").isArray)
                                         .andExpect(jsonPath("$.auction.rounds[0]").exists())
                             } else {
                                 mvc.perform(post("/auctions/$id/advance-round"))
-                                        .andDo { logger.info("Request: {} | Response: {}", it.request.contentAsString, it.response.contentAsString) }
+                                        .andDo { logger.info("Response: {}", it.response.contentAsString) }
                                         .andExpect(status().isOk)
                                         .andExpect(jsonPath("$.id").value(id!!))
                                         .andExpect(jsonPath("$.auction.rounds").isArray)

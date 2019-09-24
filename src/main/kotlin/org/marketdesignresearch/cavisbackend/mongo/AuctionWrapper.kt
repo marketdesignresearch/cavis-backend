@@ -20,6 +20,8 @@ data class AuctionWrapper(
         var name: String = "",
         var tags: List<String> = arrayListOf(),
         var auctionConfig: AuctionConfiguration = AuctionConfiguration(),
+        var private: Boolean = false,
+        var owners: List<String> = arrayListOf(),
         val createdAt: Date = Date(),
         var active: Boolean = true
 )

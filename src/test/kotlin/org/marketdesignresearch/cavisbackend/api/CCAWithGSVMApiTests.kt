@@ -3,6 +3,7 @@ package org.marketdesignresearch.cavisbackend.api
 import org.assertj.core.api.Assertions.assertThat
 import org.json.JSONArray
 import org.json.JSONObject
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -14,6 +15,8 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import org.springframework.test.web.servlet.setup.MockMvcBuilders
+import org.springframework.web.context.WebApplicationContext
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -22,7 +25,14 @@ class CCAWithGSVMApiTests {
     private val logger = LoggerFactory.getLogger(CCAWithGSVMApiTests::class.java)
 
     @Autowired
+    lateinit var wac: WebApplicationContext
+
     lateinit var mvc: MockMvc
+
+    @BeforeEach
+    fun setup() {
+        this.mvc = MockMvcBuilders.webAppContextSetup(this.wac).build()
+    }
 
     @Test
     fun `Should create new CCA auction in GSVM domain`() {
@@ -61,7 +71,7 @@ class CCAWithGSVMApiTests {
         mvc.perform(get("/auctions/$id"))
                 .andExpect(status().isOk)
                 .andDo {
-                    logger.info("Request: {} | Response: {}", it.request.contentAsString, it.response.contentAsString)
+                    logger.info("Response: {}", it.response.contentAsString)
                     assertThat(content).isEqualTo(it.response.contentAsString)
                 }
                 .andExpect(jsonPath("$.id").exists())
@@ -100,13 +110,13 @@ class CCAWithGSVMApiTests {
                         .content(JSONObject()
                                 .put(bidder1Id, JSONArray().put(JSONObject().put("amount", 2).put("bundle", JSONObject().put(item2Id, 1))))
                                 .put(bidder2Id, JSONArray().put(JSONObject().put("amount", 3).put("bundle", JSONObject().put(item1Id, 1)))).toString()))
-                .andDo { logger.info("Request: {} | Response: {}", it.request.contentAsString, it.response.contentAsString) }
+                .andDo { logger.info("Response: {}", it.response.contentAsString) }
                 .andExpect(status().isOk)
                 .andExpect(jsonPath("$.id").value(id!!))
                 .andExpect(jsonPath("$.auction.rounds").isEmpty)
 
         mvc.perform(post("/auctions/$id/close-round"))
-                .andDo { logger.info("Request: {} | Response: {}", it.request.contentAsString, it.response.contentAsString) }
+                .andDo { logger.info("Response: {}", it.response.contentAsString) }
                 .andExpect(status().isOk)
                 .andExpect(jsonPath("$.id").value(id!!))
                 .andExpect(jsonPath("$.auction.currentRoundType").value("Supplementary Round"))
