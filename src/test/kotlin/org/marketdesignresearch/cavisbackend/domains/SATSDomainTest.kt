@@ -21,7 +21,7 @@ class SATSDomainTest {
         )
 
         val totalValues: List<String> = listOf(
-                "427.2671",
+                "405.1789",
                 "550.4388",
                 "11658633670.1631"
         )

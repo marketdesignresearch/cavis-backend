@@ -13,6 +13,7 @@ import org.marketdesignresearch.mechlib.mechanism.auctions.cca.priceupdate.Simpl
 import org.marketdesignresearch.mechlib.mechanism.auctions.pvm.PVMAuction
 import org.marketdesignresearch.mechlib.mechanism.auctions.pvm.ml.MLAlgorithm
 import org.marketdesignresearch.mechlib.mechanism.auctions.sequential.SequentialAuction
+import org.marketdesignresearch.mechlib.mechanism.auctions.simultaneous.SimultaneousAuction
 import org.marketdesignresearch.mechlib.outcomerules.OutcomeRuleGenerator
 import java.math.BigDecimal
 import kotlin.math.max
@@ -30,8 +31,10 @@ enum class AuctionFactory(val prettyName: String) {
 
     fun getAuction(domain: Domain, config: AuctionConfiguration = AuctionConfiguration()): Auction {
         val auction = when (this) {
-            SINGLE_ITEM_FIRST_PRICE, SIMULTANEOUS_FIRST_PRICE -> Auction(domain, OutcomeRuleGenerator.FIRST_PRICE)
-            SINGLE_ITEM_SECOND_PRICE, SIMULTANEOUS_SECOND_PRICE -> Auction(domain, OutcomeRuleGenerator.SECOND_PRICE)
+            SINGLE_ITEM_FIRST_PRICE -> Auction(domain, OutcomeRuleGenerator.FIRST_PRICE)
+            SINGLE_ITEM_SECOND_PRICE -> Auction(domain, OutcomeRuleGenerator.SECOND_PRICE)
+            SIMULTANEOUS_FIRST_PRICE -> SimultaneousAuction(domain, OutcomeRuleGenerator.FIRST_PRICE)
+            SIMULTANEOUS_SECOND_PRICE -> SimultaneousAuction(domain, OutcomeRuleGenerator.SECOND_PRICE)
             SEQUENTIAL_FIRST_PRICE -> SequentialAuction(domain, OutcomeRuleGenerator.FIRST_PRICE)
             SEQUENTIAL_SECOND_PRICE -> SequentialAuction(domain, OutcomeRuleGenerator.SECOND_PRICE)
             VCG -> Auction(domain, OutcomeRuleGenerator.VCG_XOR)
