@@ -45,9 +45,10 @@ data class JSONValueQuery(val bundles: List<Map<UUID, Int>>, val bidders: List<U
 data class JSONValueQueryResponse(val value: BigDecimal, val bundle: Bundle)
 data class JSONInferredValueQuery(val bundle: Map<UUID, Int>, val bidder: UUID)
 data class JSONInferredValueQueryResponse(val inferredValues: List<BigDecimal>)
+
 data class AuctionListItem(val id: UUID, val name: String, val createdAt: Date, val domain: String, val auctionType: String,
-                           val numberOfBidders: Int, val numberOfGoods: Int, val roundsPlayed: Int, val seed: Long, val tags: List<String>) {
-    constructor(aw: AuctionWrapper) : this(aw.id, aw.name, aw.createdAt, aw.auction.domain.name, aw.auctionType.prettyName, aw.auction.domain.bidders.size, aw.auction.domain.goods.size, aw.auction.numberOfRounds, aw.seed, aw.tags)
+                           val numberOfBidders: Int, val numberOfGoods: Int, val roundsPlayed: Int, val private: Boolean, val seed: Long, val tags: List<String>) {
+    constructor(aw: AuctionWrapper) : this(aw.id, aw.name, aw.createdAt, aw.auction.domain.name, aw.auctionType.prettyName, aw.auction.domain.bidders.size, aw.auction.domain.goods.size, aw.auction.numberOfRounds, aw.private, aw.seed, aw.tags)
 }
 
 data class AuctionEdit(val name: String?, val tags: List<String>?, val private: Boolean?)
