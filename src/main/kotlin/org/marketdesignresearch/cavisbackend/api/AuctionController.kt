@@ -21,7 +21,6 @@ import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.core.context.SecurityContextHolder
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken
 import org.springframework.web.bind.annotation.*
 import java.math.BigDecimal
 import java.util.*
@@ -108,7 +107,6 @@ class AuctionController(private val auctionWrapperDAO: AuctionWrapperDAO) {
 
     @GetMapping("/")
     fun getAuctions(@AuthenticationPrincipal principal: Any): ResponseEntity<List<AuctionListItem>> {
-        val auth = SecurityContextHolder.getContext().authentication
         return ResponseEntity.ok(filter(SessionManagement.get()).map { AuctionListItem(it) })
     }
 
@@ -356,5 +354,14 @@ class AuctionController(private val auctionWrapperDAO: AuctionWrapperDAO) {
         }
         save(auctionWrapper)
         return ResponseEntity.ok(mechanismResult)
+    }
+
+    @GetMapping("/{uuid}/efficient-allocation")
+    fun getEfficientAllocation(@PathVariable uuid: UUID): ResponseEntity<Allocation> {
+        val auctionWrapper = SessionManagement.get(uuid) ?: return ResponseEntity.notFound().build()
+        if (!hasAccess(auctionWrapper)) return ResponseEntity.status(HttpStatus.FORBIDDEN).build()
+        val efficientAllocation = auctionWrapper.auction.domain.efficientAllocation
+        save(auctionWrapper)
+        return ResponseEntity.ok(efficientAllocation)
     }
 }
