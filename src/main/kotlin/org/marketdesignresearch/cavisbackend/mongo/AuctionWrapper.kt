@@ -2,6 +2,7 @@ package org.marketdesignresearch.cavisbackend.mongo
 
 import org.marketdesignresearch.cavisbackend.api.AuctionConfiguration
 import org.marketdesignresearch.cavisbackend.domains.AuctionFactory
+import org.marketdesignresearch.cavisbackend.domains.DomainWrapper
 import org.marketdesignresearch.mechlib.mechanism.auctions.Auction
 import org.springframework.data.annotation.Id
 import org.springframework.data.mongodb.core.mapping.Document
@@ -14,6 +15,7 @@ import java.util.*
 data class AuctionWrapper(
         @Id
         val id: UUID,
+        val domainConfig: DomainWrapper,
         val auction: Auction,
         val auctionType: AuctionFactory,
         val seed: Long,

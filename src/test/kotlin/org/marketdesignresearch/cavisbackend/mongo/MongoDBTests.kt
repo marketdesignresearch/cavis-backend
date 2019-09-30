@@ -44,7 +44,7 @@ internal class MongoDBTests {
                     AuctionFactory.values().asList().stream().map { auctionFactory ->
                         DynamicTest.dynamicTest("Testing DB storing & retrieving in ${domainWrapper.getName()}, using $auctionFactory") {
                             val auction = auctionFactory.getAuction(domain)
-                            val auctionWrapper = AuctionWrapper(UUID.randomUUID(), auction, auctionFactory, seed)
+                            val auctionWrapper = AuctionWrapper(UUID.randomUUID(), domainWrapper, auction, auctionFactory, seed)
                             auctionWrapperDAO.save(auctionWrapper)
                             val retrieved = auctionWrapperDAO.findByIdOrNull(auctionWrapper.id)
                                     ?: fail("Could not find object in DB.")

@@ -2,6 +2,7 @@ package org.marketdesignresearch.cavisbackend
 
 import org.marketdesignresearch.cavisbackend.domains.AuctionFactory
 import org.marketdesignresearch.cavisbackend.api.AuctionConfiguration
+import org.marketdesignresearch.cavisbackend.domains.DomainWrapper
 import org.marketdesignresearch.cavisbackend.mongo.AuctionWrapper
 import org.marketdesignresearch.mechlib.core.Domain
 import java.util.*
@@ -12,7 +13,7 @@ object SessionManagement {
 
     private val sessions: HashMap<UUID, AuctionWrapper> = HashMap()
 
-    fun create(domain: Domain,
+    fun create(domainConfig: DomainWrapper,
                type: AuctionFactory,
                auctionConfig: AuctionConfiguration,
                seed: Long,
@@ -22,9 +23,10 @@ object SessionManagement {
                owners: List<String> = emptyList()
     ): AuctionWrapper {
         val uuid = UUID.randomUUID()
-        val auction = type.getAuction(domain, auctionConfig)
+        val auction = type.getAuction(domainConfig.toDomain(seed), auctionConfig)
         val auctionWrapper = AuctionWrapper(
                 id = uuid,
+                domainConfig = domainConfig,
                 auction = auction,
                 auctionType = type,
                 seed = seed,

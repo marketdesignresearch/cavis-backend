@@ -85,7 +85,7 @@ class AuctionController(private val auctionWrapperDAO: AuctionWrapperDAO) {
         val auth = SecurityContextHolder.getContext().authentication
         val auctionWrapper = if (auth != null && auth.authorities.map{it.authority}.contains("ROLE_IDENTIFIED")) {
             SessionManagement.create(
-                    domain = body.domain.toDomain(body.seed),
+                    domainConfig = body.domain,
                     type = body.auctionType,
                     auctionConfig = body.auctionConfig,
                     seed = body.seed,
@@ -95,7 +95,7 @@ class AuctionController(private val auctionWrapperDAO: AuctionWrapperDAO) {
                     owners = listOf(auth.name))
         } else {
             SessionManagement.create(
-                    domain = body.domain.toDomain(body.seed),
+                    domainConfig = body.domain,
                     type = body.auctionType,
                     auctionConfig = body.auctionConfig,
                     seed = body.seed,
