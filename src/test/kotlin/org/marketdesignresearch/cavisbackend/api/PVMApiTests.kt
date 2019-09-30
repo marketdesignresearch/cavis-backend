@@ -125,12 +125,14 @@ class PVMApiTests {
                 .andExpect(jsonPath("$.auction.restrictedBids.$bidder1Id").isArray)
                 .andExpect(jsonPath("$.auction.restrictedBids.$bidder2Id").isArray)
                 .andExpect(jsonPath("$.auction.restrictedBids.$bidder3Id").isArray)
-                .andExpect(jsonPath("$.auction.allowedNumberOfBids").value(20))
+                .andExpect(jsonPath("$.auction.allowedNumberOfBids").value(5))
 
         mvc.perform(post("/auctions/$id/advance-round"))
                 .andDo { logger.info("Response: {}", it.response.contentAsString) }
                 .andExpect(status().isOk)
                 .andExpect(jsonPath("$.auction.rounds[0]").exists())
+                .andExpect(jsonPath("$.auction.rounds[0].pvm.queriedBundles").exists())
+                .andExpect(jsonPath("$.auction.rounds[0].pvm.inferredOptimalAllocation").exists())
                 .andExpect(jsonPath("$.auction.rounds[1]").doesNotExist())
                 .andExpect(jsonPath("$.auction.restrictedBids").exists())
                 .andExpect(jsonPath("$.auction.restrictedBids.$bidder1Id").isArray)

@@ -61,7 +61,7 @@ enum class AuctionFactory(val prettyName: String) {
                     PaymentRule.VCG -> OutcomeRuleGenerator.VCG_XOR
                     PaymentRule.CCG -> OutcomeRuleGenerator.CCG
                 }
-                val pvm = PVMAuction(domain, MLAlgorithm.Type.LINEAR_REGRESSION, outcomeRuleGenerator, max(domain.goods.size + 1, config.pvmConfig.initialRoundBids))
+                val pvm = PVMAuction(domain, MLAlgorithm.Type.LINEAR_REGRESSION, outcomeRuleGenerator, domain.goods.size + 1)
                 pvm.maxRounds = config.pvmConfig.maxRounds
                 return pvm
             }

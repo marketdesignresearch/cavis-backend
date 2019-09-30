@@ -11,7 +11,6 @@ data class CCAConfiguration(
 )
 
 data class PVMConfiguration(
-        var initialRoundBids: Int = 20,
         var paymentRule: PaymentRule = PaymentRule.VCG,
         var maxRounds: Int = 100
 )

@@ -110,7 +110,10 @@ class APISerialization {
             jsonGenerator.writeObjectField("bids", round.bids)
             jsonGenerator.writeObjectField("outcome", round.outcome)
             jsonGenerator.writeStringField("description", round.description)
+            jsonGenerator.writeObjectFieldStart("pvm")
             jsonGenerator.writeObjectField("inferredOptimalAllocation", round.inferredOptimalAllocation)
+            jsonGenerator.writeObjectField("queriedBundles", round.queriedBundles)
+            jsonGenerator.writeEndObject()
             jsonGenerator.writeEndObject()
         }
 
