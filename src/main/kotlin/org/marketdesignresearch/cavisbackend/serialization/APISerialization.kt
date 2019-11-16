@@ -151,6 +151,13 @@ class APISerialization {
             jsonGenerator.writeObjectField("socialWelfare", outcome.socialWelfare)
             jsonGenerator.writeObjectFieldStart("winnerUtilities")
             outcome.winners.forEach {
+                jsonGenerator.writeNumberField(it.id.toString(),
+                        it.getValue(outcome.allocation.allocationOf(it).bundle)
+                        .minus(outcome.payment.paymentOf(it).amount))
+            }
+            jsonGenerator.writeEndObject()
+            jsonGenerator.writeObjectFieldStart("winnerPayoffs")
+            outcome.winners.forEach {
                 jsonGenerator.writeNumberField(it.id.toString(), outcome.payoffOf(it))
             }
             jsonGenerator.writeEndObject()
@@ -224,8 +231,8 @@ class APISerialization {
             jsonGenerator.writeStartObject()
             jsonGenerator.writeStringField("id", gsvmBidder.id.toString())
             jsonGenerator.writeStringField("name", gsvmBidder.name)
-            jsonGenerator.writeStringField("description", gsvmBidder.description)
-            jsonGenerator.writeStringField("shortDescription", gsvmBidder.shortDescription)
+            jsonGenerator.writeStringField("description", gsvmBidder.description.replace(" Setup", ""))
+            jsonGenerator.writeStringField("shortDescription", gsvmBidder.shortDescription.replace(" Setup", ""))
             jsonGenerator.writeNumberField("position", gsvmBidder.bidderPosition)
             jsonGenerator.writeEndObject()
         }
@@ -257,8 +264,8 @@ class APISerialization {
             jsonGenerator.writeStartObject()
             jsonGenerator.writeStringField("id", lsvmBidder.id.toString())
             jsonGenerator.writeStringField("name", lsvmBidder.name)
-            jsonGenerator.writeStringField("description", lsvmBidder.description)
-            jsonGenerator.writeStringField("shortDescription", lsvmBidder.shortDescription)
+            jsonGenerator.writeStringField("description", lsvmBidder.description.replace(" Setup", ""))
+            jsonGenerator.writeStringField("shortDescription", lsvmBidder.shortDescription.replace(" Setup", ""))
             jsonGenerator.writeArrayFieldStart("proximity")
             lsvmBidder.proximity.forEach { jsonGenerator.writeString(it.uuid.toString()) }
             jsonGenerator.writeEndArray()
