@@ -1,5 +1,6 @@
 package org.marketdesignresearch.cavisbackend.api
 
+import org.bson.BsonMaximumSizeExceededException
 import org.marketdesignresearch.cavisbackend.SessionManagement
 import org.marketdesignresearch.cavisbackend.domains.AuctionFactory
 import org.marketdesignresearch.cavisbackend.domains.DomainWrapper
@@ -13,6 +14,7 @@ import org.marketdesignresearch.mechlib.core.price.Price
 import org.marketdesignresearch.mechlib.mechanism.auctions.IllegalBidException
 import org.marketdesignresearch.mechlib.mechanism.auctions.pvm.PVMAuction
 import org.marketdesignresearch.mechlib.mechanism.auctions.sequential.SequentialAuction
+import org.slf4j.LoggerFactory
 import org.spectrumauctions.sats.core.model.SATSBidder
 import org.spectrumauctions.sats.core.model.SATSGood
 import org.springframework.data.repository.findByIdOrNull
@@ -57,10 +59,18 @@ data class AuctionEdit(val name: String?, val tags: List<String>?, val private: 
 @RequestMapping("/auctions")
 class AuctionController(private val auctionWrapperDAO: AuctionWrapperDAO) {
 
+    private val logger = LoggerFactory.getLogger(AuctionController::class.java)
+
+
     private fun save(auctionWrapper: AuctionWrapper) {
         if (auctionWrapper.auction.domain.goods.none { it is SATSGood } &&
                 auctionWrapper.auction.domain.bidders.none { it is SATSBidder }) {
-            auctionWrapperDAO.save(auctionWrapper)
+            try {
+                auctionWrapperDAO.save(auctionWrapper)
+            } catch (e: BsonMaximumSizeExceededException) {
+                logger.error("Couldn't save auction because it's too large", e)
+                logger.error(auctionWrapper.toString())
+            }
         }
     }
 
