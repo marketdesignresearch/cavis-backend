@@ -9,17 +9,11 @@ COPY pom.xml /usr/src/app/pom.xml
 COPY src/ /usr/src/app/src/
 
 # Clone necessary repos
-RUN mkdir -p /root/.ssh && \
-    chmod 0700 /root/.ssh && \
-    ssh-keyscan github.com > /root/.ssh/known_hosts
-COPY docker/ssh/mechlib_rsa /root/.ssh/id_rsa
-RUN chmod 600 /root/.ssh/id_rsa \
-        && git clone git@github.com:Clabfabs/marketmechanisms.git --single-branch --branch ${MECHLIB_BRANCH} \
-        && rm -rf /root/.ssh/
+RUN git clone https://github.com/marketdesignresearch/mechlib.git --single-branch --branch ${MECHLIB_BRANCH}
 RUN git clone https://github.com/spectrumauctions/sats.git --single-branch --branch ${SATS_BRANCH}
 
 RUN mvn install:install-file -Dfile=cplex.jar -DgroupId=cplex -DartifactId=cplex -Dversion=12.9 -Dpackaging=jar \
-    && mvn clean install -f marketmechanisms -DskipTests \
+    && mvn clean install -f mechlib -DskipTests \
     && mvn clean install -f sats -DskipTests \
     && cd /usr/src/app \
     && mvn clean package -DskipTests
