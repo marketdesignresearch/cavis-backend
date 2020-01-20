@@ -3,6 +3,7 @@ version: '3'
 services:
   api:
     build:
+      restart: always
       context: .
       args:
         MECHLIB_BRANCH: master
@@ -15,11 +16,13 @@ services:
       - 8080:8080
 
   mongo:
+    restart: always
     image: mongo
     volumes:
       - mongodb:/data/db
 
   frontend:
+    restart: always
     build: ../cavis-frontend
     depends_on:
       - api
